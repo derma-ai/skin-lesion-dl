@@ -10,5 +10,5 @@
 
 CUDA_VISIBLE_DEVICES=0
 
-source activate derma
+source activate idp_env
 srun ./run.sh

@@ -4,7 +4,7 @@ import torchvision
 import pytorch_lightning as pl
 
 
-class SimpleClassifier(pl.LightningModule):
+class ResNetClassifier(pl.LightningModule):
     """
     Classifier Model written in pytorch_lightning
 

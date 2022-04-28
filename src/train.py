@@ -1,46 +1,42 @@
-import os
-import numpy as np
-import matplotlib.pyplot as plt
 from argparse import ArgumentParser
-
-from sklearn.svm import SVC
+import imp
+from pyparsing import string
 
 import pytorch_lightning as pl
 import torch
-
 import torchvision
 import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+from pytorch_lightning.loggers import TensorBoardLogger
+from sklearn.model_selection import train_test_split
 from torchsummary import summary
 
-from model import SimpleClassifier
+from subset import Subset
+
+from model import ResNetClassifier
 
 def setup_data():
-    norm_mean = [0.485, 0.456, 0.406]
-    norm_std = [0.229, 0.224, 0.225]
 
     train_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((32,32)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
-        transforms.RandomRotation(degrees=45),
-        transforms.Normalize(norm_mean, norm_std),
+        transforms.Resize((224,224))
     ])
 
     val_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((32,32)),
-        transforms.Normalize(norm_mean, norm_std),
+        transforms.Resize((224,224))
     ])
-
-    train_data = torchvision.datasets.CIFAR10(root='./', download=True, transform=train_transform)
-    val_data = torchvision.datasets.CIFAR10(root='./', download=True, train=False, transform=val_transform)
-    
+    root = "./../archive"
+    dataset = datasets.ImageFolder(root, train_transform)
+    train_data_idx, val_data_idx = train_test_split(list(range(len(dataset))),test_size=0.2, stratify=dataset.targets)
+    train_data = Subset(dataset, train_data_idx, train_transform)
+    val_data = Subset(dataset, val_data_idx, val_transform)
     return train_data, val_data
 
 def train(batch_size=16,
           learning_rate=1e-3,
-          max_epochs=100):
+          max_epochs=100,
+          version_name = "1"):
 
     train_data, val_data = setup_data()
 
@@ -56,17 +52,20 @@ def train(batch_size=16,
                                         drop_last=False,
                                         shuffle=False)
 
-    model = SimpleClassifier(learning_rate=learning_rate,
+    model = ResNetClassifier(learning_rate=learning_rate,
                             num_classes=len(train_data.classes))
+
 
     trainer = pl.Trainer(devices=1,
                          accelerator='gpu',
                          max_epochs=max_epochs,
+                         log_every_n_steps=50,
+                         flush_logs_every_n_steps= 300
                         )
+    logger = TensorBoardLogger(version=version_name, name="tensorboard_logs")
+    trainer.fit(model, train_loader, val_loader, logger)
 
-    trainer.fit(model, train_loader, val_loader)
-
-    trainer.save_checkpoint('saved_model.ckpt')
+    trainer.save_checkpoint(f'model_{version_name}.ckpt')
 
 def main():
 
@@ -74,10 +73,11 @@ def main():
     parser.add_argument('-e', '--max_epochs', type=int, dest='max_epochs', default=10, help="Number of training epochs")
     parser.add_argument('-b', '--batch_size', type=int, dest='batch_size', default=16, help="Batch size")
     parser.add_argument('-lr', '--learning_rate', type=float, dest='learning_rate', default=1e-3, help="Learning rate")
+    parser.add_argument('-v', '--version', type= string, dest='version_name', default="1", help="Name of current model version")
 
     args = parser.parse_args()
 
-    train(batch_size=args.batch_size, max_epochs=args.max_epochs, learning_rate=args.learning_rate)
+    train(batch_size=args.batch_size, max_epochs=args.max_epochs, learning_rate=args.learning_rate, version_name=args.version_name)
     
 if __name__ == "__main__":
     main()
