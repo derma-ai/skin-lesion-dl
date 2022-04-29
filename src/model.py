@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import torchmetrics
 import torchvision
 import pytorch_lightning as pl
@@ -28,17 +29,21 @@ class ResNetClassifier(pl.LightningModule):
     
     """
     def __init__(self, 
-                 num_classes=7,
-                 class_weights=None,
-                 learning_rate=5e-5):
+                 num_classes=8,
+                 class_weights=None):
         super().__init__()
 
         self.num_classes = num_classes
         self.zero_prob = 0.5
-        self.learning_rate = learning_rate
-
-        self.backbone = torchvision.models.resnet50(pretrained=True, progress=True)
-        self.backbone.fc = torch.nn.Linear(in_features=2048, out_features=num_classes, bias=True)
+        
+        self.extractor = torchvision.models.resnet50(pretrained=True, progress=True)
+        # For now just freeze the entire model and use the pretrained conv and linear layers
+        self.extractor.requires_grad_(False)
+        self.fc1 = nn.Linear(1000, 600)
+        self.dropout1 = nn.Dropout(self.zero_prob)
+        self.fc2 = nn.Linear(600, 200)
+        self.dropout2 = nn.Dropout(self.zero_prob)
+        self.fc3 = nn.Linear(200, 8)
 
         self.val_acc = torchmetrics.Accuracy(num_classes=num_classes, average='macro')
 
@@ -48,10 +53,15 @@ class ResNetClassifier(pl.LightningModule):
             self.loss = torch.nn.CrossEntropyLoss()
 
     def forward(self, x):
-        return self.backbone(x)
+        x = self.extractor(x)
+        x = self.fc1(x)
+        x = self.dropout1(x)
+        x = self.fc2(x)
+        x = self.dropout2(x)
+        x = self.fc3(x)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.backbone.parameters(), 
+        optimizer = torch.optim.Adam(self.extractor.parameters(), 
                                     lr=self.learning_rate)
         return optimizer
 
