@@ -26,26 +26,35 @@ class ResNetClassifier(pl.LightningModule):
 
     Methods
     -------
-    
+
     """
-    def __init__(self, 
+    def __init__(self,
                  num_classes=8,
+                 learning_rate=1e-3,
+                 weight_decay=1e-8,
                  class_weights=None):
         super().__init__()
 
         self.num_classes = num_classes
+        self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
         self.zero_prob = 0.5
-        
-        self.extractor = torchvision.models.resnet50(pretrained=True, progress=True)
+
+        self.extractor = torchvision.models.resnet50(
+            pretrained=True, progress=True)
         # For now just freeze the entire model and use the pretrained conv and linear layers
         self.extractor.requires_grad_(False)
+        self.extractor.fc.requires_grad_(True)
         self.fc1 = nn.Linear(1000, 600)
         self.dropout1 = nn.Dropout(self.zero_prob)
         self.fc2 = nn.Linear(600, 200)
         self.dropout2 = nn.Dropout(self.zero_prob)
         self.fc3 = nn.Linear(200, 8)
 
-        self.val_acc = torchmetrics.Accuracy(num_classes=num_classes, average='macro')
+        self.train_acc = torchmetrics.Accuracy(
+            num_classes=num_classes, average='macro')
+        self.val_acc = torchmetrics.Accuracy(
+            num_classes=num_classes, average='macro')
 
         if class_weights is not None:
             self.loss = torch.nn.CrossEntropyLoss(weight=class_weights)
@@ -59,10 +68,12 @@ class ResNetClassifier(pl.LightningModule):
         x = self.fc2(x)
         x = self.dropout2(x)
         x = self.fc3(x)
+        return x
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.extractor.parameters(), 
-                                    lr=self.learning_rate)
+        optimizer = torch.optim.Adam(self.extractor.parameters(),
+                                     lr=self.learning_rate,
+                                     weight_decay=self.weight_decay)
         return optimizer
 
     def training_step(self, train_batch, batch_idx):
@@ -70,23 +81,30 @@ class ResNetClassifier(pl.LightningModule):
 
         logits = self.forward(x)
         loss = self.loss(logits, y)
+        self.train_acc(logits, y)
 
         self.log('train_loss',
-                loss,
-                on_step=True,
-                on_epoch=False,
-                prog_bar=True,
-                logger=True)
+                 loss,
+                 on_step=True,
+                 on_epoch=False,
+                 prog_bar=True,
+                 logger=True)
+        self.log('train_acc',
+                 self.train_acc,
+                 on_step=True,
+                 on_epoch=True,
+                 prog_bar=True,
+                 logger=True)
 
         return loss
-    
+
     def validation_step(self, val_batch, batch_idx):
         x, y = val_batch
         logits = self.forward(x)
 
         loss = self.loss(logits, y)
         self.val_acc(logits, y)
-        self.log('val_acc', 
+        self.log('val_acc',
                  self.val_acc,
                  on_step=True,
                  on_epoch=True,

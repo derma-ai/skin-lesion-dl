@@ -15,6 +15,8 @@ class Subset(Dataset):
         self.dataset = dataset
         self.indices = indices
         self.transform = transform
+        # We just use the classes from the source dataset
+        self.classes = self.dataset.classes
 
     def __getitem__(self, idx):
         sample = self.dataset[self.indices[idx]]
