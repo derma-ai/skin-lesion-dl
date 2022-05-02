@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
-import imp
 from pyparsing import string
+import os
 
 import pytorch_lightning as pl
 import torch
@@ -11,9 +11,9 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.model_selection import train_test_split
 from torchsummary import summary
 
-from src.subset import Subset
+from subset import Subset
 
-from src.model import ResNetClassifier
+from model import ResNetClassifier
 
 
 def setup_data(test_mode):
@@ -27,7 +27,7 @@ def setup_data(test_mode):
         transforms.ToTensor(),
         transforms.Resize((224, 224))
     ])
-    root = "./../archive"
+    root = os.path.join(os.path.expanduser("~"), "share-all", "derma-data", "archive")
     dataset = datasets.ImageFolder(root)
     train_data_idx, val_data_idx = train_test_split(
         list(range(len(dataset))), test_size=0.2, stratify=dataset.targets)
@@ -70,7 +70,7 @@ def train(batch_size=16,
         save_dir="./")
     trainer = pl.Trainer(devices=1,
                          accelerator='gpu',
-                         max_epochs=max_epochs,
+			 max_epochs=max_epochs,
                          logger=logger
                          )
     trainer.fit(model, train_loader, val_loader)
@@ -87,8 +87,8 @@ def main():
                         dest='batch_size', default=16, help="Batch size")
     parser.add_argument('-lr', '--learning_rate', type=float,
                         dest='learning_rate', default=1e-3, help="Learning rate")
-    parser.add_argument('-wd', '--weight_decay', type=float, dest="weight_decay", help="Weight decay")
-    parser.add_argument('-c', '--comment', type=string, dest="comment", help="Comment")
+    parser.add_argument('-wd', '--weight_decay', type=float, default=1e-8, dest="weight_decay", help="Weight decay")
+    parser.add_argument('-c', '--comment', type=str, default="", dest="comment", help="Comment")
 
     args = parser.parse_args()
 
