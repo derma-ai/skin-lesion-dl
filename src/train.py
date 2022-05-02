@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-import imp
 from pyparsing import string
 
 import pytorch_lightning as pl
@@ -54,13 +53,17 @@ def train(batch_size=16,
                                                batch_size=batch_size,
                                                num_workers=8,
                                                drop_last=False,
-                                               shuffle=True)
+                                               shuffle=True,
+					       timeout= 30,
+					       pin_memory = True)
 
     val_loader = torch.utils.data.DataLoader(val_data,
                                              batch_size=batch_size,
                                              num_workers=8,
                                              drop_last=False,
-                                             shuffle=False)
+                                             shuffle=False,
+					     timeout=30,
+					     pin_memory=True)
 
     model = ResNetClassifier(learning_rate=learning_rate,
                              weight_decay=weight_decay, num_classes=len(train_data.classes))
