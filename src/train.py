@@ -19,15 +19,19 @@ from model import ResNetClassifier
 
 
 def setup_data(test_mode):
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
 
     train_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((224, 224))
+        transforms.Resize((224, 224),
+        normalize)
     ])
 
     val_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((224, 224))
+        transforms.Resize((224, 224),
+        normalize)
     ])
     root = os.path.join(os.path.expanduser("~"), "share-all", "derma-data", "archive")
     dataset = datasets.ImageFolder(root)
@@ -38,6 +42,7 @@ def setup_data(test_mode):
         # Limit dataset and make validation and test set the same
         train_data_idx = [32*n for n in range(512)]
         val_data_idx = [32*n for n in range(512)]
+
     train_data = Subset(dataset, train_data_idx, train_transform)
     val_data = Subset(dataset, val_data_idx, val_transform)
     return train_data, val_data
@@ -59,7 +64,6 @@ def train(batch_size=32,
                                                shuffle=True,
                                                timeout= 30000,
                                                pin_memory = True)
-
 
 
     val_loader = torch.utils.data.DataLoader(val_data,
