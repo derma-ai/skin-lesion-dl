@@ -45,12 +45,9 @@ class ResNetClassifier(pl.LightningModule):
         self.resnet_conv_layers = list(torchvision.models.resnet50(
             pretrained=True, progress=True).children())[:-1]
         self.extractor = nn.Sequential(*self.resnet_conv_layers)
-        # For now just freeze the entire model and use the pretrained conv and linear layers
         self.extractor.requires_grad_(False)
         self.fc1 = nn.Linear(2048, 1024)
-        # self.dropout1 = nn.Dropout(self.zero_prob)
         self.fc2 = nn.Linear(1024, 512)
-        # self.dropout2 = nn.Dropout(self.zero_prob)
         self.fc3 = nn.Linear(512, 8)
 
         self.train_acc = torchmetrics.Accuracy(
@@ -68,9 +65,7 @@ class ResNetClassifier(pl.LightningModule):
         x = self.extractor(x)
         x = torch.squeeze(x)
         x = self.fc1(x)
-        # x = self.dropout1(x)
         x = self.fc2(x)
-        # x = self.dropout2(x)
         x = self.fc3(x)
         return x
 
