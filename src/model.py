@@ -3,6 +3,7 @@ import torch.nn as nn
 import torchmetrics
 import torchvision
 import pytorch_lightning as pl
+import seaborn as sns
 
 
 class ResNetClassifier(pl.LightningModule):
@@ -55,6 +56,7 @@ class ResNetClassifier(pl.LightningModule):
             num_classes=num_classes, average='macro')
         self.val_acc = torchmetrics.Accuracy(
             num_classes=num_classes, average='macro')
+        self.conf_matrix = torchmetrics.ConfusionMatrix(self.num_classes)
 
         if class_weights is not None:
             self.loss = torch.nn.CrossEntropyLoss(weight=class_weights)
@@ -110,4 +112,22 @@ class ResNetClassifier(pl.LightningModule):
                  on_epoch=True,
                  prog_bar=True,
                  logger=True)
-        return loss
+        preds = nn.Softmax(dim=1)(logits)
+        return y, preds
+
+    def validation_epoch_end(self, validation_step_outputs):
+        pred_step_tensors = []
+        target__step_tensors = []
+        for tuple in validation_step_outputs:
+            target__step_tensors.append(tuple[0])
+            pred_step_tensors.append(tuple[1])
+        concat_targets = torch.cat(target__step_tensors)
+        stacked_preds = torch.vstack(pred_step_tensors)
+        print(stacked_preds.device)
+        confusion_matrix = self.conf_matrix(preds= stacked_preds, target=concat_targets)
+        print(confusion_matrix)
+        confusion_matrix_np = confusion_matrix.cpu().data.numpy()
+        heat_map = sns.heatmap(confusion_matrix_np, annot=True)
+        print(type(heat_map.get_figure()))
+        self.logger.experiment.add_figure("conf matrix", heat_map.get_figure())
+        

@@ -38,7 +38,6 @@ def setup_data(test_mode):
         # Limit dataset and make validation and test set the same
         train_data_idx = [32*n for n in range(512)]
         val_data_idx = [32*n for n in range(512)]
-
     train_data = Subset(dataset, train_data_idx, train_transform)
     val_data = Subset(dataset, val_data_idx, val_transform)
     return train_data, val_data
