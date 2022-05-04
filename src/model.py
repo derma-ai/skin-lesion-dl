@@ -45,9 +45,9 @@ class ResNetClassifier(pl.LightningModule):
         self.resnet_conv_layers = list(torchvision.models.resnet50(
             pretrained=True, progress=True).children())[:-1]
         self.extractor = nn.Sequential(*self.resnet_conv_layers)
+        summary(self.extractor.cuda(), (3,224,224))
         # For now just freeze the entire model and use the pretrained conv and linear layers
         self.extractor.requires_grad_(False)
-
         self.fc1 = nn.Linear(2048, 1024)
         # self.dropout1 = nn.Dropout(self.zero_prob)
         self.fc2 = nn.Linear(1024, 512)
@@ -67,10 +67,11 @@ class ResNetClassifier(pl.LightningModule):
 
     def forward(self, x):
         x = self.extractor(x)
+        x = torch.squeeze(x)
         x = self.fc1(x)
-        x = self.dropout1(x)
+        # x = self.dropout1(x)
         x = self.fc2(x)
-        x = self.dropout2(x)
+        # x = self.dropout2(x)
         x = self.fc3(x)
         return x
 
@@ -125,11 +126,8 @@ class ResNetClassifier(pl.LightningModule):
             pred_step_tensors.append(tuple[1])
         concat_targets = torch.cat(target__step_tensors)
         stacked_preds = torch.vstack(pred_step_tensors)
-        print(stacked_preds.device)
         confusion_matrix = self.conf_matrix(preds= stacked_preds, target=concat_targets)
-        print(confusion_matrix)
         confusion_matrix_np = confusion_matrix.cpu().data.numpy()
         heat_map = sns.heatmap(confusion_matrix_np, annot=True)
-        print(type(heat_map.get_figure()))
         self.logger.experiment.add_figure("conf matrix", heat_map.get_figure())
         
