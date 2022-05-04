@@ -89,7 +89,7 @@ def train(batch_size=32,
                                                       weight_decay=weight_decay, 
                                                       num_classes=len(train_data.classes))
     elif(len(checkpoint)>0):
-        ckpt = glob.glob(f'./checkpoints/model_bs\=*-lr\=*-wd\=*-{checkpoint}.ckpt')
+        ckpt = max(glob.glob(f"./checkpoints/*{checkpoint}.ckpt"), key=os.path.getctime)
         print(ckpt)
         model = ResNetClassifier.load_from_checkpoint(ckpt,
                                                       learning_rate=learning_rate,
