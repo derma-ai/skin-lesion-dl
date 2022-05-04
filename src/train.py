@@ -24,14 +24,14 @@ def setup_data(test_mode):
 
     train_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((224, 224),
-        normalize)
+        transforms.Resize((224, 224)),
+        normalize
     ])
 
     val_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((224, 224),
-        normalize)
+        transforms.Resize((224, 224)),
+        normalize
     ])
     root = os.path.join(os.path.expanduser("~"), "share-all", "derma-data", "archive")
     dataset = datasets.ImageFolder(root)
