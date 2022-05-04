@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 from pyparsing import string
 import os
 
-
 import pytorch_lightning as pl
 import torch
 import torchvision
@@ -11,7 +10,6 @@ import torchvision.datasets as datasets
 from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.model_selection import train_test_split
 from torchsummary import summary
-import glob
 
 from subset import Subset
 
@@ -43,13 +41,13 @@ def setup_data(test_mode):
     val_data = Subset(dataset, val_data_idx, val_transform)
     return train_data, val_data
 
-def train(batch_size=32,
+def train(batch_size=16,
           learning_rate=1e-3,
           weight_decay=1e-8,
           max_epochs=100,
           version_name="1",
           test_mode = False,
-          checkpoint = None):
+	  checkpoint = False):
 
     train_data, val_data = setup_data(test_mode=test_mode)
 
@@ -58,43 +56,30 @@ def train(batch_size=32,
                                                num_workers=8,
                                                drop_last=False,
                                                shuffle=True,
-                                               timeout= 30000,
-                                               pin_memory = True)
-
-
+					       timeout= 30000,
+					       pin_memory = True)
 
     val_loader = torch.utils.data.DataLoader(val_data,
                                              batch_size=batch_size,
                                              num_workers=8,
                                              drop_last=False,
                                              shuffle=False,
-                                             timeout=30000,
-                                             pin_memory=True)
-    
-    logger = TensorBoardLogger(version=version_name, save_dir="./")
+					     timeout=30000,
+					     pin_memory=True)
+
+    model = ResNetClassifier(learning_rate=learning_rate,
+                             weight_decay=weight_decay, num_classes=len(train_data.classes))
+
+    logger = TensorBoardLogger(
+        version=version_name, 
+        save_dir="./")
     trainer = pl.Trainer(devices=1,
                          accelerator='gpu',
-                         max_epochs=max_epochs,
+			 max_epochs=max_epochs,
                          logger=logger
                          )
-    if(checkpoint is None):
-        print("Checkpoint is None")
-        model = ResNetClassifier(learning_rate=learning_rate,
-                                 weight_decay=weight_decay, 
-                                 num_classes=len(train_data.classes))
-    elif(len(checkpoint) == 0):
-        latest_ckpt = max(glob.glob('./checkpoints/*.ckpt'), key=os.path.getctime)
-        model = ResNetClassifier.load_from_checkpoint(latest_ckpt,
-                                                      learning_rate=learning_rate,
-                                                      weight_decay=weight_decay, 
-                                                      num_classes=len(train_data.classes))
-    elif(len(checkpoint)>0):
-        ckpt = glob.glob(f'./checkpoints/model_bs\=*-lr\=*-wd\=*-{checkpoint}.ckpt')
-        print(ckpt)
-        model = ResNetClassifier.load_from_checkpoint(ckpt,
-                                                      learning_rate=learning_rate,
-                                                      weight_decay=weight_decay, 
-                                                      num_classes=len(train_data.classes))
+    if(checkpoint):
+	model = ResNetClassifier.load_from_checkpoint('../checkpoints/mmodel_bs\=64-lr\=0.001-wd\=1e-08-test\ run.ckptodel_test_run.ckpt')
     trainer.fit(model, train_loader, val_loader)
 
     trainer.save_checkpoint(f'model_{version_name}.ckpt')
@@ -111,7 +96,7 @@ def main():
                         dest='learning_rate', default=1e-3, help="Learning rate")
     parser.add_argument('-wd', '--weight_decay', type=float, default=1e-8, dest="weight_decay", help="Weight decay")
     parser.add_argument('-c', '--comment', type=str, default="", dest="comment", help="Comment")
-    parser.add_argument('-ckpt', '--checkpoint', type=str, default=None, dest="checkpoint", help="Call model from checkpoint by version name")    
+    parser.add_argument('-ckpt', '--checkpoint', type=boolean, default=False, dest="checkpoint", help="Call model from checkpoint")	
     args = parser.parse_args()
 
     train(batch_size=args.batch_size, 
@@ -119,7 +104,6 @@ def main():
           learning_rate=args.learning_rate, 
           weight_decay=args.weight_decay,
           version_name=f'bs={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.comment}',
-          checkpoint=args.checkpoint,
           test_mode=False)
 
 
