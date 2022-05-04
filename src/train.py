@@ -19,8 +19,8 @@ from model import ResNetClassifier
 
 
 def setup_data(test_mode):
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
+    # This somehow makes the performance terrible.
+    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     train_transform = transforms.Compose([
         transforms.ToTensor(),

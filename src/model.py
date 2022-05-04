@@ -45,7 +45,6 @@ class ResNetClassifier(pl.LightningModule):
         self.resnet_conv_layers = list(torchvision.models.resnet50(
             pretrained=True, progress=True).children())[:-1]
         self.extractor = nn.Sequential(*self.resnet_conv_layers)
-        summary(self.extractor.cuda(), (3,224,224))
         # For now just freeze the entire model and use the pretrained conv and linear layers
         self.extractor.requires_grad_(False)
         self.fc1 = nn.Linear(2048, 1024)
