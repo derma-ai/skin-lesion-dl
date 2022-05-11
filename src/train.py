@@ -33,13 +33,14 @@ def setup_data():
     ])
     root = os.path.join(os.path.expanduser("~"), "share-all", "derma-data", "archive")
     dataset = datasets.ImageFolder(root)
-    
+
     train_data_idx, val_data_idx = train_test_split(
         list(range(len(dataset))), test_size=0.2, stratify=dataset.targets)
-    
+
     train_data = Subset(dataset, train_data_idx, train_transform)
     val_data = Subset(dataset, val_data_idx, val_transform)
     return train_data, val_data
+
 
 def setup_data_loaders(train_data, val_data, batch_size):
     train_loader = torch.utils.data.DataLoader(train_data,
@@ -47,9 +48,8 @@ def setup_data_loaders(train_data, val_data, batch_size):
                                                num_workers=8,
                                                drop_last=False,
                                                shuffle=True,
-                                               timeout= 30000,
-                                               pin_memory = True)
-
+                                               timeout=30000,
+                                               pin_memory=True)
 
     val_loader = torch.utils.data.DataLoader(val_data,
                                              batch_size=batch_size,
@@ -60,14 +60,15 @@ def setup_data_loaders(train_data, val_data, batch_size):
                                              pin_memory=True)
     return train_loader, val_loader
 
+
 def train(hparams,
           version_name,
-          checkpoint = None):
+          checkpoint=None):
 
     train_data, val_data = setup_data()
     hparams["c"] = len(train_data.classes)
     train_loader, val_loader = setup_data_loaders(train_data, val_data, hparams["b"])
-    
+
     logger = TensorBoardLogger(version=version_name, save_dir="./")
     trainer = pl.Trainer(devices=1,
                          accelerator='gpu',
@@ -89,9 +90,12 @@ def main():
                         dest='batch_size', default=16, help="Batch size")
     parser.add_argument('-lr', '--learning_rate', type=float,
                         dest='learning_rate', default=1e-3, help="Learning rate")
-    parser.add_argument('-wd', '--weight_decay', type=float, default=1e-8, dest="weight_decay", help="Weight decay")
-    parser.add_argument('-m', '--model', type=str, default="", dest="model", help="Model name")
-    parser.add_argument('-ckpt', '--checkpoint', type=str, default=None, dest="checkpoint", help="Call model from checkpoint by version name")    
+    parser.add_argument('-wd', '--weight_decay', type=float,
+                        default=1e-8, dest="weight_decay", help="Weight decay")
+    parser.add_argument('-m', '--model', type=str,
+                        default="", dest="model", help="Model name")
+    parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
+                        dest="checkpoint", help="Call model from checkpoint by version name")
     args = parser.parse_args()
 
     hparams = {

@@ -30,6 +30,7 @@ class ResNetClassifier(pl.LightningModule):
     -------
 
     """
+
     def __init__(self,
                  num_classes=8,
                  learning_rate=1e-3,
@@ -45,10 +46,11 @@ class ResNetClassifier(pl.LightningModule):
         self.resnet_conv_layers = list(torchvision.models.resnet50(
             pretrained=True, progress=True).children())[:-1]
         self.extractor = nn.Sequential(*self.resnet_conv_layers)
-        self.extractor.requires_grad_(False)
         self.fc1 = nn.Linear(2048, 1024)
         self.fc2 = nn.Linear(1024, 512)
         self.fc3 = nn.Linear(512, 8)
+
+        self.extractor.requires_grad_(False)
 
         self.train_acc = torchmetrics.Accuracy(
             num_classes=num_classes, average='macro')
@@ -115,13 +117,15 @@ class ResNetClassifier(pl.LightningModule):
     def validation_epoch_end(self, validation_step_outputs):
         pred_step_tensors = []
         target__step_tensors = []
+
         for tuple in validation_step_outputs:
             target__step_tensors.append(tuple[0])
             pred_step_tensors.append(tuple[1])
         concat_targets = torch.cat(target__step_tensors)
         stacked_preds = torch.vstack(pred_step_tensors)
-        confusion_matrix = self.conf_matrix(preds= stacked_preds, target=concat_targets)
+        
+        confusion_matrix = self.conf_matrix(
+            preds=stacked_preds, target=concat_targets)
         confusion_matrix_np = confusion_matrix.cpu().data.numpy()
         heat_map = sns.heatmap(confusion_matrix_np, annot=True)
         self.logger.experiment.add_figure("conf matrix", heat_map.get_figure())
-        

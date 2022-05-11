@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 
+
 class Subset(Dataset):
     """
     Subset of a dataset at specified indices.
@@ -11,6 +12,7 @@ class Subset(Dataset):
         dataset (Dataset): The whole Dataset
         indices (sequence): Indices in the whole set selected for subset
     """
+
     def __init__(self, dataset, indices, transform=None):
         self.dataset = dataset
         self.indices = indices
