@@ -26,7 +26,7 @@ def setup_data():
     val_transform = transforms.Compose([
         transforms.Resize((224, 224))
     ])
-    root = os.path.join(os.path.expanduser("~"), "share-all", "derma-data", "archive")
+    root = os.path.join("/", "space", "derma-data")
     dataset = datasets.ImageFolder(root, transform=transforms.ToTensor())
 
 
@@ -76,7 +76,6 @@ def train(hparams,
                          )
 
     model = model_loader.load(hparams, checkpoint)
-    print(model)
     trainer.fit(model, train_loader, val_loader)
 
     trainer.save_checkpoint(f'model_{version_name}.ckpt')
