@@ -69,8 +69,7 @@ def train(hparams,
     train_loader, val_loader = setup_data_loaders(train_data, val_data, hparams["b"])
 
     logger = TensorBoardLogger(version=version_name, save_dir="./")
-    trainer = pl.Trainer(devices=1,
-                         accelerator='gpu',
+    trainer = pl.Trainer(gpus=[1],
                          max_epochs=hparams["e"],
                          logger=logger
                          )
