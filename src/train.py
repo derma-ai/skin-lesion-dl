@@ -71,7 +71,7 @@ def setup_data_loaders(train_data, val_data, batch_size):
     return train_loader, val_loader
 
 def get_train_sampler(dataset):
-    dataset.
+    print(dataset.classes)
 
 def train(hparams,
           version_name,
