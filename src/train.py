@@ -45,13 +45,14 @@ def setup_data():
 
     train_data = Subset(dataset, train_data_idx, train_transform)
     val_data = Subset(dataset, val_data_idx, val_transform)
-    
+    print(len(train_data))
+    print(len(val_data))
     return train_data, val_data
 
 
-
-
 def setup_data_loaders(train_data, val_data, batch_size):
+    train_sampler = get_train_sampler(train_data)
+
     train_loader = torch.utils.data.DataLoader(train_data,
                                                batch_size=batch_size,
                                                num_workers=8,
@@ -69,6 +70,8 @@ def setup_data_loaders(train_data, val_data, batch_size):
                                              pin_memory=True)
     return train_loader, val_loader
 
+def get_train_sampler(dataset):
+    dataset.
 
 def train(hparams,
           version_name,
