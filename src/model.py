@@ -50,8 +50,6 @@ class Classifier(pl.LightningModule):
         self.extractor = nn.Sequential(*self.resnet_conv_layers)
         self.classifier = nn.Linear(layers[-1][1].in_features, self.num_classes)
 
-        self.extractor.requires_grad_(False)
-
         self.train_acc = torchmetrics.Accuracy(
             num_classes=num_classes, average='macro')
         self.val_acc = torchmetrics.Accuracy(
