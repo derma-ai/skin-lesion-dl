@@ -7,7 +7,6 @@ dataset_path = os.path.join("/", "space", "derma-data")
 images_path = os.path.join(dataset_path,"ISIC_2019_Training_Input", "ISIC_2019_Training_Input")
 print(os.path.isdir(dataset_path))
 print(dataset_path)
-"""
 class_directories = {}
 image_name_pattern = re.compile("ISIC_\d{7}.jpg")
 
@@ -46,4 +45,3 @@ for image, img_class in image_to_class.idxmax(axis=1).items():
 os.remove(os.path.join(dataset_path, "ISIC_2019_Training_GroundTruth.csv"))
 shutil.rmtree(os.path.join(dataset_path, "ISIC_2019_Training_Input"))
 
-"""
