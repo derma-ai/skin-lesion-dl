@@ -5,6 +5,7 @@ import os
 
 import pytorch_lightning as pl
 import torch
+import numpy as np
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from pytorch_lightning.loggers import TensorBoardLogger
