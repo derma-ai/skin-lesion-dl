@@ -23,22 +23,30 @@ def setup_data():
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     train_transform = transforms.Compose([
-        transforms.ToTensor(),
         transforms.Resize((224, 224))
     ])
 
     val_transform = transforms.Compose([
-        transforms.ToTensor(),
         transforms.Resize((224, 224))
     ])
     root = os.path.join(os.path.expanduser("~"), "share-all", "derma-data", "archive")
-    dataset = datasets.ImageFolder(root)
+    dataset = datasets.ImageFolder(root, transform=transforms.ToTensor())
+
 
     train_data_idx, val_data_idx = train_test_split(
         list(range(len(dataset))), test_size=0.2, stratify=dataset.targets)
 
     train_data = Subset(dataset, train_data_idx, train_transform)
     val_data = Subset(dataset, val_data_idx, val_transform)
+    resolution_sizes = []
+    print(len(dataset))
+    for i in range(len(dataset)):
+        image = dataset[i][0]
+        if(i%1000 == 0):
+            print(f"Index {i}")
+        if not image.shape in resolution_sizes:
+            resolution_sizes.append(image.shape)
+    print(resolution_sizes)
     return train_data, val_data
 
 
@@ -99,16 +107,17 @@ def main():
     args = parser.parse_args()
 
     hparams = {
-        "e": args.epochs,
+        "e": args.max_epochs,
         "b": args.batch_size,
         "lr": args.learning_rate,
         "wd": args.weight_decay,
         "m": args.model
     }
 
-    train(hparams,
-          version_name=f'b={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.model}',
-          checkpoint=args.checkpoint)
+    setup_data()
+    #train(hparams,
+    #      version_name=f'b={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.model}',
+    #      checkpoint=args.checkpoint)
 
 
 if __name__ == "__main__":
