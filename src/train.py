@@ -14,6 +14,15 @@ from torchsummary import summary
 from subset import Subset
 import model_loader
 
+def set_seed(seed=15):
+    import random
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] =str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
 
 def setup_data():
     # This somehow makes the performance terrible.
@@ -105,6 +114,8 @@ def main():
         "wd": args.weight_decay,
         "m": args.model
     }
+
+    set_seed()
 
     train(hparams,
           version_name=f'b={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.experiment_name}',
