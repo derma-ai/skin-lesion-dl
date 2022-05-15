@@ -10,12 +10,9 @@ import torchvision.datasets as datasets
 from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.model_selection import train_test_split
 from torchsummary import summary
-import glob
 
 from subset import Subset
 import model_loader
-
-from model import ResNetClassifier
 
 
 def setup_data():
@@ -38,16 +35,10 @@ def setup_data():
 
     train_data = Subset(dataset, train_data_idx, train_transform)
     val_data = Subset(dataset, val_data_idx, val_transform)
-    resolution_sizes = []
-    print(len(dataset))
-    for i in range(len(dataset)):
-        image = dataset[i][0]
-        if(i%1000 == 0):
-            print(f"Index {i}")
-        if not image.shape in resolution_sizes:
-            resolution_sizes.append(image.shape)
-    print(resolution_sizes)
+    
     return train_data, val_data
+
+
 
 
 def setup_data_loaders(train_data, val_data, batch_size):
@@ -85,6 +76,7 @@ def train(hparams,
                          )
 
     model = model_loader.load(hparams, checkpoint)
+    print(model)
     trainer.fit(model, train_loader, val_loader)
 
     trainer.save_checkpoint(f'model_{version_name}.ckpt')
@@ -100,6 +92,8 @@ def main():
                         dest='learning_rate', default=1e-3, help="Learning rate")
     parser.add_argument('-wd', '--weight_decay', type=float,
                         default=1e-8, dest="weight_decay", help="Weight decay")
+    parser.add_argument('-ex', '--experiment', type=str,
+                        default="", dest="experiment_name", help="Experiment name")
     parser.add_argument('-m', '--model', type=str,
                         default="", dest="model", help="Model name")
     parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
@@ -114,10 +108,9 @@ def main():
         "m": args.model
     }
 
-    setup_data()
-    #train(hparams,
-    #      version_name=f'b={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.model}',
-    #      checkpoint=args.checkpoint)
+    train(hparams,
+          version_name=f'b={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.experiment_name}',
+          checkpoint=args.checkpoint)
 
 
 if __name__ == "__main__":

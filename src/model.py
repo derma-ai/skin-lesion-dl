@@ -2,12 +2,13 @@ import torch
 import torch.nn as nn
 import torchmetrics
 import torchvision
+import torchvision.models as models
 import pytorch_lightning as pl
 import seaborn as sns
 from torchsummary import summary
 
 
-class ResNetClassifier(pl.LightningModule):
+class Classifier(pl.LightningModule):
     """
     Classifier Model written in pytorch_lightning
 
@@ -32,6 +33,7 @@ class ResNetClassifier(pl.LightningModule):
     """
 
     def __init__(self,
+                 model_name,
                  num_classes=8,
                  learning_rate=1e-3,
                  weight_decay=1e-8,
@@ -43,12 +45,10 @@ class ResNetClassifier(pl.LightningModule):
         self.weight_decay = weight_decay
         self.zero_prob = 0.5
 
-        self.resnet_conv_layers = list(torchvision.models.resnet50(
-            pretrained=True, progress=True).children())[:-1]
+        layers = list(get_model(model_name).children())
+        self.resnet_conv_layers = layers[:-1]
         self.extractor = nn.Sequential(*self.resnet_conv_layers)
-        self.fc1 = nn.Linear(2048, 1024)
-        self.fc2 = nn.Linear(1024, 512)
-        self.fc3 = nn.Linear(512, 8)
+        self.classifier = nn.Linear(layers[-1][1].in_features, self.num_classes)
 
         self.extractor.requires_grad_(False)
 
@@ -66,9 +66,7 @@ class ResNetClassifier(pl.LightningModule):
     def forward(self, x):
         x = self.extractor(x)
         x = torch.squeeze(x)
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.fc3(x)
+        x = self.classifier(x)
         return x
 
     def configure_optimizers(self):
@@ -129,3 +127,35 @@ class ResNetClassifier(pl.LightningModule):
         confusion_matrix_np = confusion_matrix.cpu().data.numpy()
         heat_map = sns.heatmap(confusion_matrix_np, annot=True)
         self.logger.experiment.add_figure("conf matrix", heat_map.get_figure())
+    def on_train_epoch_start(self):
+        if self.current_epoch == 8:
+            self.extractor.requires_grad_(True)
+
+def get_model(model_name, pretrained=True):
+    if model_name == "efficientnet_b0":
+        model = models.efficientnet_b0(pretrained)
+        return model
+    if model_name == "efficientnet_b1":
+        return models.efficientnet_b1(pretrained)
+    if model_name == "efficientnet_b2":
+        return models.efficientnet_b2(pretrained)
+    if model_name == "efficientnet_b3":
+        return models.efficientnet_b3(pretrained)
+    if model_name == "efficientnet_b4":
+        return models.efficientnet_b4(pretrained)
+    if model_name == "efficientnet_b5":
+        return models.efficientnet_b5(pretrained)
+    if model_name == "efficientnet_b6":
+        return models.efficientnet_b6(pretrained)
+    if model_name == "efficientnet_b7":
+        return models.efficientnet_b7(pretrained)
+    if model_name == "resnet50":
+        return models.resnet50(pretrained)
+    if model_name == "resnet101":
+        return models.resnet101(pretrained)
+    if model_name == "densenet121":
+        return models.densenet121(pretrained)
+    if model_name == "resnext50_32x4d":
+        return models.resnext50_32x4d(pretrained)
+    if model_name == "resnext101_32x8d":
+        return models.resnext101_32x8d(pretrained)
