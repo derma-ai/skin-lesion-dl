@@ -161,7 +161,7 @@ class Classifier(pl.LightningModule):
             preds=stacked_preds, target=concat_targets)
         confusion_matrix_np = confusion_matrix.cpu().data.numpy()
         heat_map = sns.heatmap(confusion_matrix_np, annot=True)
-        self.logger.experiment.add_figure("conf matrix", heat_map.get_figure())
+        self.logger.experiment.add_figure("conf matrix", heat_map.get_figure(), global_step=self.current_epoch)
 
     def on_train_epoch_start(self):
         if self.current_epoch == 8:
