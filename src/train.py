@@ -6,6 +6,7 @@ import os
 import pytorch_lightning as pl
 import numpy as np
 import torch
+import torch.nn as nn
 from torch.utils.data.sampler import WeightedRandomSampler
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
@@ -31,15 +32,19 @@ def setup_data():
     # This somehow makes the performance terrible.
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
-    train_transform = transforms.Compose([
+    train_transform = nn.Sequential(
         transforms.ToTensor(),
-        transforms.Resize((224, 224))
-    ])
+        transforms.Resize((224, 224)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomVerticalFlip(),
+        transforms.RandomRotation(degrees=(0,180))
 
-    val_transform = transforms.Compose([
+    )
+
+    val_transform = nn.Sequential(
         transforms.ToTensor(),
-        transforms.Resize((224, 224))
-    ])
+        transforms.Resize((224, 224)),
+    )
     root = os.path.join("/", "space", "derma-data")
     dataset = datasets.ImageFolder(root)
 
