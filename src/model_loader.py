@@ -7,14 +7,15 @@ import torch.nn as nn
 from model import Classifier
 
 
-def load(hparams, checkpoint):
+def load(hparams, checkpoint, class_weights=None):
     if(checkpoint is None):
         print("Checkpoint is None")
         model = Classifier(
             model_name=hparams["m"],
             learning_rate=hparams["lr"],
             weight_decay=hparams["wd"],
-            num_classes=hparams["c"])
+            num_classes=hparams["c"],
+            class_weights = class_weights)
     elif(len(checkpoint) == 0):
         latest_ckpt = max(glob.glob('./checkpoints/*.ckpt'),
                           key=os.path.getctime)
@@ -22,7 +23,8 @@ def load(hparams, checkpoint):
                                                 model_name=hparams["m"],
                                                 learning_rate=hparams["lr"],
                                                 weight_decay=hparams["wd"],
-                                                num_classes=hparams["c"])
+                                                num_classes=hparams["c"],
+                                                class_weights = class_weights)
     else:
         ckpt = max(
             glob.glob(f"./checkpoints/*{checkpoint}.ckpt"), key=os.path.getctime)
@@ -31,5 +33,6 @@ def load(hparams, checkpoint):
                                                 model_name=hparams["m"],
                                                 learning_rate=hparams["lr"],
                                                 weight_decay=hparams["wd"],
-                                                num_classes=hparams["c"])
+                                                num_classes=hparams["c"],
+                                                class_weights = class_weights)
     return model

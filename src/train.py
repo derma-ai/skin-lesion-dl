@@ -52,23 +52,21 @@ def setup_data():
 
 
 def compute_weights(dataset):
-    target_train = [dataset.dataset.targets[i] for i in dataset.indices]
-    class_sample_count = np.array([len(np.where(target_train == t)[0]) for t in np.unique(target_train)])
+    class_sample_count = np.unique(dataset.targets, return_counts=True)[1]
     weights = 1.0 / class_sample_count
-    weights_per_sample = np.array([weights[t] for t in target_train])
-    weights_per_sample = torch.from_numpy(weights_per_sample)
-    return weights, weights_per_sample
+    weights_per_sample = np.array([weights[t] for t in dataset.targets])
+    return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()
 
 def setup_data_loaders(train_data, val_data, batch_size):
-    _, weights_per_sample = compute_weights(train_data)
-    weighted_sampler = WeightedRandomSampler(weights_per_sample, batch_size)
-
+    _, weights_per_sample = compute_weights(train_data.dataset)
+    weights_per_sample = weights_per_sample[train_data.indices]
+    # Test oversampling with factor 1.5
+    weighted_sampler = WeightedRandomSampler(weights=weights_per_sample, num_samples= int(len(train_data) * 1.5))
     train_loader = torch.utils.data.DataLoader(train_data,
                                                batch_size=batch_size,
                                                sampler= weighted_sampler,
                                                num_workers=8,
                                                drop_last=False,
-                                               shuffle=True,
                                                timeout=30000,
                                                pin_memory=True)
 
@@ -87,10 +85,12 @@ def train(hparams,
           checkpoint=None):
 
     train_data, val_data, weights = setup_data()
+    
     hparams["c"] = len(train_data.classes)
     train_loader, val_loader = setup_data_loaders(train_data, val_data, hparams["b"])
+    print(len(train_loader), len(val_loader))
     
-    model = model_loader.load(hparams, checkpoint, class_weights= weights)
+    model = model_loader.load(hparams, checkpoint, class_weights=weights)
     
     logger = TensorBoardLogger(version=version_name, 
                                save_dir="./", 
@@ -127,7 +127,7 @@ def main():
     args = parser.parse_args()
 
     hparams = {
-        "e": args.epochs,
+        "e": args.max_epochs,
         "b": args.batch_size,
         "lr": args.learning_rate,
         "wd": args.weight_decay,

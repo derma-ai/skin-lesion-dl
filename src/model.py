@@ -96,9 +96,9 @@ class Classifier(pl.LightningModule):
         logits = self.forward(x)
         loss = self.loss(logits, y)
         self.train_acc(logits, y)
-        self.train_acc_per_class(logits,y)
-        self.train_prec_per_class(logits,y)
-        self.train_rec_per_class(logits,y)
+        train_acc_per_class = self.train_acc_per_class(logits,y)
+        train_prec_per_class = self.train_prec_per_class(logits,y)
+        train_rec_per_class = self.train_rec_per_class(logits,y)
 
 
 
@@ -116,26 +116,10 @@ class Classifier(pl.LightningModule):
                  prog_bar=True,
                  logger=True)
 
-        self.log('train_acc_per_class',
-                 self.train_acc_per_class,
-                 on_step=False,
-                 on_epoch=True,
-                 prog_bar=True,
-                 logger=True)
+        self.log_per_class(mode="train", metric="acc", values=train_acc_per_class)
+        self.log_per_class(mode="train", metric="prec", values=train_prec_per_class)
+        self.log_per_class(mode="train", metric="rec", values=train_rec_per_class)
 
-        self.log('train_prec_per_class',
-                 self.train_prec_per_class,
-                 on_step=False,
-                 on_epoch=True,
-                 prog_bar=True,
-                 logger=True)
-                 
-        self.log('train_rec_per_class',
-                 self.train_rec_per_class,
-                 on_step=False,
-                 on_epoch=True,
-                 prog_bar=True,
-                 logger=True)
         return loss
 
     def validation_step(self, val_batch, batch_idx):
@@ -144,9 +128,9 @@ class Classifier(pl.LightningModule):
 
         #loss = self.loss(logits, y)
         self.val_acc(logits, y)
-        self.val_acc_per_class(logits, y)
-        self.val_prec_per_class(logits, y)
-        self.val_rec_per_class(logits,y)
+        val_acc_per_class = self.val_acc_per_class(logits, y)
+        val_prec_per_class = self.val_prec_per_class(logits, y)
+        val_rec_per_class = self.val_rec_per_class(logits,y)
 
         self.log('val_acc',
                  self.val_acc,
@@ -155,31 +139,15 @@ class Classifier(pl.LightningModule):
                  prog_bar=True,
                  logger=True)
 
-        self.log('val_acc_per_class',
-                 self.val_acc_per_class,
-                 on_step=True,
-                 on_epoch=True,
-                 prog_bar=True,
-                 logger=True)
-        
-        self.log('val_prec_per_class',
-                 self.val_prec_per_class,
-                 on_step=False,
-                 on_epoch=True,
-                 prog_bar=True,
-                 logger=True)
-                 
-        self.log('val_rec_per_class',
-                 self.val_rec_per_class,
-                 on_step=False,
-                 on_epoch=True,
-                 prog_bar=True,
-                 logger=True)
+        self.log_per_class(mode="val", metric="acc", values=val_acc_per_class)
+        self.log_per_class(mode="val", metric="prec", values=val_prec_per_class)
+        self.log_per_class(mode="val", metric="rec", values=val_rec_per_class)
+
         preds = nn.Softmax(dim=1)(logits)
         return y, preds
 
     def validation_epoch_end(self, validation_step_outputs):
-        add_histogram()
+        self.add_histogram()
         pred_step_tensors = []
         target__step_tensors = []
 
@@ -198,6 +166,19 @@ class Classifier(pl.LightningModule):
     def on_train_epoch_start(self):
         if self.current_epoch == 8:
             self.extractor.requires_grad_(True)
+
+    def log_per_class(self, mode, metric, values):
+        for i in range(len(values)):
+            self.log(f'{mode}_{metric}_class_{i}',
+                 values[i],
+                 on_step=False,
+                 on_epoch=True,
+                 prog_bar=True,
+                 logger=True)
+
+    def add_histogram(self):
+        for name, params in self.named_parameters():
+            self.logger.experiment.add_histogram(name,params, self.current_epoch)
 
 def get_model(model_name, pretrained=True):
     if model_name == "efficientnet_b0":
@@ -230,6 +211,3 @@ def get_model(model_name, pretrained=True):
 
 
 
-def add_histogram(self):
-    for name, params in self.named_parameters():
-        self.logger.experiment.add_histogram(name,params, self.current_epoch)
