@@ -4,13 +4,15 @@ import os
 
 
 import pytorch_lightning as pl
-import torch
 import numpy as np
+import torch
+from torch.utils.data.sampler import WeightedRandomSampler
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.model_selection import train_test_split
 from torchsummary import summary
+import glob
 
 from subset import Subset
 import model_loader
@@ -30,31 +32,40 @@ def setup_data():
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     train_transform = transforms.Compose([
+        transforms.ToTensor(),
         transforms.Resize((224, 224))
     ])
 
     val_transform = transforms.Compose([
+        transforms.ToTensor(),
         transforms.Resize((224, 224))
     ])
     root = os.path.join("/", "space", "derma-data")
-    dataset = datasets.ImageFolder(root, transform=transforms.ToTensor())
-
+    dataset = datasets.ImageFolder(root)
 
     train_data_idx, val_data_idx = train_test_split(
         list(range(len(dataset))), test_size=0.2, stratify=dataset.targets)
-
+    weights, _ = compute_weights(dataset)
     train_data = Subset(dataset, train_data_idx, train_transform)
     val_data = Subset(dataset, val_data_idx, val_transform)
-    print(len(train_data))
-    print(len(val_data))
-    return train_data, val_data
+    return train_data, val_data, weights
 
+
+def compute_weights(dataset):
+    target_train = [dataset.dataset.targets[i] for i in dataset.indices]
+    class_sample_count = np.array([len(np.where(target_train == t)[0]) for t in np.unique(target_train)])
+    weights = 1.0 / class_sample_count
+    weights_per_sample = np.array([weights[t] for t in target_train])
+    weights_per_sample = torch.from_numpy(weights_per_sample)
+    return weights, weights_per_sample
 
 def setup_data_loaders(train_data, val_data, batch_size):
-    train_sampler = get_train_sampler(train_data)
+    _, weights_per_sample = compute_weights(train_data)
+    weighted_sampler = WeightedRandomSampler(weights_per_sample, batch_size)
 
     train_loader = torch.utils.data.DataLoader(train_data,
                                                batch_size=batch_size,
+                                               sampler= weighted_sampler,
                                                num_workers=8,
                                                drop_last=False,
                                                shuffle=True,
@@ -70,24 +81,28 @@ def setup_data_loaders(train_data, val_data, batch_size):
                                              pin_memory=True)
     return train_loader, val_loader
 
-def get_train_sampler(dataset):
-    print(dataset.classes)
 
 def train(hparams,
           version_name,
           checkpoint=None):
 
-    train_data, val_data = setup_data()
+    train_data, val_data, weights = setup_data()
     hparams["c"] = len(train_data.classes)
     train_loader, val_loader = setup_data_loaders(train_data, val_data, hparams["b"])
-
-    logger = TensorBoardLogger(version=version_name, save_dir="./")
+    
+    model = model_loader.load(hparams, checkpoint, class_weights= weights)
+    
+    logger = TensorBoardLogger(version=version_name, 
+                               save_dir="./", 
+                               log_graph=True
+                               )
+    
     trainer = pl.Trainer(gpus=[1],
                          max_epochs=hparams["e"],
                          logger=logger
                          )
 
-    model = model_loader.load(hparams, checkpoint)
+    
     trainer.fit(model, train_loader, val_loader)
 
     trainer.save_checkpoint(f'model_{version_name}.ckpt')
@@ -112,7 +127,7 @@ def main():
     args = parser.parse_args()
 
     hparams = {
-        "e": args.max_epochs,
+        "e": args.epochs,
         "b": args.batch_size,
         "lr": args.learning_rate,
         "wd": args.weight_decay,
@@ -120,7 +135,6 @@ def main():
     }
 
     set_seed()
-
     train(hparams,
           version_name=f'b={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.experiment_name}',
           checkpoint=args.checkpoint)

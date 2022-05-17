@@ -50,11 +50,28 @@ class Classifier(pl.LightningModule):
         self.extractor = nn.Sequential(*self.resnet_conv_layers)
         self.classifier = nn.Linear(layers[-1][1].in_features, self.num_classes)
 
+        # training metrics
         self.train_acc = torchmetrics.Accuracy(
             num_classes=num_classes, average='macro')
+        self.train_acc_per_class = torchmetrics.Accuracy(
+            num_classes=num_classes, average='none')
+        self.train_prec_per_class = torchmetrics.Precision(
+            num_classes=num_classes, average='none')
+        self.train_rec_per_class= torchmetrics.Recall(
+            num_classes=num_classes, average='none')
+        
+        # validation metrics
         self.val_acc = torchmetrics.Accuracy(
             num_classes=num_classes, average='macro')
+        self.val_acc_per_class= torchmetrics.Accuracy(
+            num_classes=num_classes, average='none')
+        self.val_prec_per_class = torchmetrics.Precision(
+            num_classes=num_classes, average='none')
+        self.val_rec_per_class= torchmetrics.Recall(
+            num_classes=num_classes, average='none')
         self.conf_matrix = torchmetrics.ConfusionMatrix(self.num_classes)
+
+        self.example_input_array = torch.rand(10,3,224,224)
 
         if class_weights is not None:
             self.loss = torch.nn.CrossEntropyLoss(weight=class_weights)
@@ -79,6 +96,11 @@ class Classifier(pl.LightningModule):
         logits = self.forward(x)
         loss = self.loss(logits, y)
         self.train_acc(logits, y)
+        self.train_acc_per_class(logits,y)
+        self.train_prec_per_class(logits,y)
+        self.train_rec_per_class(logits,y)
+
+
 
         self.log('train_loss',
                  loss,
@@ -86,6 +108,7 @@ class Classifier(pl.LightningModule):
                  on_epoch=False,
                  prog_bar=True,
                  logger=True)
+
         self.log('train_acc',
                  self.train_acc,
                  on_step=True,
@@ -93,17 +116,62 @@ class Classifier(pl.LightningModule):
                  prog_bar=True,
                  logger=True)
 
+        self.log('train_acc_per_class',
+                 self.train_acc_per_class,
+                 on_step=False,
+                 on_epoch=True,
+                 prog_bar=True,
+                 logger=True)
+
+        self.log('train_prec_per_class',
+                 self.train_prec_per_class,
+                 on_step=False,
+                 on_epoch=True,
+                 prog_bar=True,
+                 logger=True)
+                 
+        self.log('train_rec_per_class',
+                 self.train_rec_per_class,
+                 on_step=False,
+                 on_epoch=True,
+                 prog_bar=True,
+                 logger=True)
         return loss
 
     def validation_step(self, val_batch, batch_idx):
         x, y = val_batch
         logits = self.forward(x)
 
-        loss = self.loss(logits, y)
+        #loss = self.loss(logits, y)
         self.val_acc(logits, y)
+        self.val_acc_per_class(logits, y)
+        self.val_prec_per_class(logits, y)
+        self.val_rec_per_class(logits,y)
+
         self.log('val_acc',
                  self.val_acc,
                  on_step=True,
+                 on_epoch=True,
+                 prog_bar=True,
+                 logger=True)
+
+        self.log('val_acc_per_class',
+                 self.val_acc_per_class,
+                 on_step=True,
+                 on_epoch=True,
+                 prog_bar=True,
+                 logger=True)
+        
+        self.log('val_prec_per_class',
+                 self.val_prec_per_class,
+                 on_step=False,
+                 on_epoch=True,
+                 prog_bar=True,
+                 logger=True)
+                 
+        self.log('val_rec_per_class',
+                 self.val_rec_per_class,
+                 on_step=False,
                  on_epoch=True,
                  prog_bar=True,
                  logger=True)
@@ -111,6 +179,7 @@ class Classifier(pl.LightningModule):
         return y, preds
 
     def validation_epoch_end(self, validation_step_outputs):
+        add_histogram()
         pred_step_tensors = []
         target__step_tensors = []
 
@@ -125,6 +194,7 @@ class Classifier(pl.LightningModule):
         confusion_matrix_np = confusion_matrix.cpu().data.numpy()
         heat_map = sns.heatmap(confusion_matrix_np, annot=True)
         self.logger.experiment.add_figure("conf matrix", heat_map.get_figure())
+
     def on_train_epoch_start(self):
         if self.current_epoch == 8:
             self.extractor.requires_grad_(True)
@@ -157,3 +227,9 @@ def get_model(model_name, pretrained=True):
         return models.resnext50_32x4d(pretrained)
     if model_name == "resnext101_32x8d":
         return models.resnext101_32x8d(pretrained)
+
+
+
+def add_histogram(self):
+    for name, params in self.named_parameters():
+        self.logger.experiment.add_histogram(name,params, self.current_epoch)
