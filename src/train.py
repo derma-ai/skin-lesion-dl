@@ -18,41 +18,42 @@ import glob
 from subset import Subset
 import model_loader
 
+
 def set_seed(seed=15):
     import random
     random.seed(seed)
-    os.environ['PYTHONHASHSEED'] =str(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
 
+
 def setup_data():
     # This somehow makes the performance terrible.
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
-    train_transform = nn.Sequential(
+    base_transforms = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((224, 224)),
+        transforms.Resize((224, 224))
+    ]
+    )
+
+    train_transform = nn.Sequential(
         transforms.RandomHorizontalFlip(),
         transforms.RandomVerticalFlip(),
-        transforms.RandomRotation(degrees=(0,180))
-
+        transforms.RandomRotation(degrees=(0, 180))
     )
 
-    val_transform = nn.Sequential(
-        transforms.ToTensor(),
-        transforms.Resize((224, 224)),
-    )
     root = os.path.join("/", "space", "derma-data")
-    dataset = datasets.ImageFolder(root)
+    dataset = datasets.ImageFolder(root, base_transforms)
 
     train_data_idx, val_data_idx = train_test_split(
         list(range(len(dataset))), test_size=0.2, stratify=dataset.targets)
     weights, _ = compute_weights(dataset)
     train_data = Subset(dataset, train_data_idx, train_transform)
-    val_data = Subset(dataset, val_data_idx, val_transform)
+    val_data = Subset(dataset, val_data_idx)
     return train_data, val_data, weights
 
 
@@ -60,16 +61,20 @@ def compute_weights(dataset):
     class_sample_count = np.unique(dataset.targets, return_counts=True)[1]
     weights = 1.0 / class_sample_count
     weights_per_sample = np.array([weights[t] for t in dataset.targets])
+    print(class_sample_count)
+    print(weights_per_sample)
     return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()
+
 
 def setup_data_loaders(train_data, val_data, batch_size):
     _, weights_per_sample = compute_weights(train_data.dataset)
     weights_per_sample = weights_per_sample[train_data.indices]
     # Test oversampling with factor 1.5
-    weighted_sampler = WeightedRandomSampler(weights=weights_per_sample, num_samples= int(len(train_data) * 1.5))
+    weighted_sampler = WeightedRandomSampler(
+        weights=weights_per_sample, num_samples=int(len(train_data) * 1.5))
     train_loader = torch.utils.data.DataLoader(train_data,
                                                batch_size=batch_size,
-                                               sampler= weighted_sampler,
+                                               sampler=weighted_sampler,
                                                num_workers=8,
                                                drop_last=False,
                                                timeout=30000,
@@ -90,24 +95,24 @@ def train(hparams,
           checkpoint=None):
 
     train_data, val_data, weights = setup_data()
-    
+
     hparams["c"] = len(train_data.classes)
-    train_loader, val_loader = setup_data_loaders(train_data, val_data, hparams["b"])
+    train_loader, val_loader = setup_data_loaders(
+        train_data, val_data, hparams["b"])
     print(len(train_loader), len(val_loader))
-    
+
     model = model_loader.load(hparams, checkpoint, class_weights=weights)
-    
-    logger = TensorBoardLogger(version=version_name, 
-                               save_dir="./", 
+
+    logger = TensorBoardLogger(version=version_name,
+                               save_dir="./",
                                log_graph=True
                                )
-    
+
     trainer = pl.Trainer(gpus=[1],
                          max_epochs=hparams["e"],
                          logger=logger
                          )
 
-    
     trainer.fit(model, train_loader, val_loader)
 
     trainer.save_checkpoint(f'model_{version_name}.ckpt')
