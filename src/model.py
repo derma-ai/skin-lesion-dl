@@ -120,12 +120,12 @@ class Classifier(pl.LightningModule):
         self.log_per_class(mode="train", metric="prec", values=train_prec_per_class)
         self.log_per_class(mode="train", metric="rec", values=train_rec_per_class)
 
-        return loss, class_counts
+        return {"loss":loss, "class_counts": class_counts}
     
     def training_epoch_end(self, outputs) -> None:
         total_counts = Counter()
-        for tuple in outputs:
-            total_counts += tuple[1]
+        for dict in outputs:
+            total_counts += dict["class_counts"]
         print(total_counts.most_common())
     
     def validation_step(self, val_batch, batch_idx):
