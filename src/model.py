@@ -161,9 +161,9 @@ class Classifier(pl.LightningModule):
 
         concat_targets = torch.cat(target__step_tensors)
         stacked_preds = torch.vstack(pred_step_tensors)
-        val_acc_per_class = self.val_acc_per_class(concat_targets, stacked_preds)
-        val_prec_per_class = self.val_prec_per_class(concat_targets, stacked_preds)
-        val_rec_per_class = self.val_rec_per_class(concat_targets,stacked_preds)
+        val_acc_per_class = self.val_acc_per_class(stacked_preds,concat_targets)
+        val_prec_per_class = self.val_prec_per_class( stacked_preds, concat_targets)
+        val_rec_per_class = self.val_rec_per_class(stacked_preds,concat_targets)
         self.log_per_class(mode="val", metric="acc", values=val_acc_per_class)
         self.log_per_class(mode="val", metric="prec", values=val_prec_per_class)
         self.log_per_class(mode="val", metric="rec", values=val_rec_per_class)
