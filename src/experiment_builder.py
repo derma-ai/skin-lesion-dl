@@ -25,7 +25,7 @@ class ExperimentBuilder:
         self.weight_decay = weight_decay
         self.class_weights = class_weights
 
-        layers = self.get_model().children()
+        layers = list(self.get_model().children())
         convolution_layers = layers[:-1]
         self.extractor = nn.Sequential(*convolution_layers)
         self.classifier = nn.Linear(
