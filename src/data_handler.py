@@ -37,14 +37,12 @@ def setup_data(hparams):
 def get_train_transforms(flags=None):
     if flags is None:
         # Default transforms
-        data_transforms = nn.Sequential(
+        return nn.Sequential(
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
             transforms.RandomRotation(degrees=(0, 180))
         )
-    data_transforms = nn.Sequential(*build_transform_list(flags))
-    return data_transforms
-
+    return nn.Sequential(*build_transform_list(flags))
 
 def build_transform_list(flags):
     transform_flags = flags.split(",")
