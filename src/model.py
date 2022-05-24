@@ -127,7 +127,7 @@ class Classifier(pl.LightningModule):
         total_counts = Counter()
         for dict in outputs:
             total_counts += dict["class_counts"]
-        print(total_counts.most_common())
+        print(type(total_counts))
     
     def validation_step(self, val_batch, batch_idx):
         x, y = val_batch
