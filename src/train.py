@@ -33,13 +33,13 @@ def train(hparams,
     print(len(train_loader), len(val_loader))
 
     model = experiment_builder.ExperimentBuilder(
-        model_name=hparams["m"],
+        extractor_type=hparams["m"],
         num_classes=hparams["c"],
-        learning_rate=hparams["lr"]
-
+        learning_rate=hparams["lr"],
+        class_weights=weights
     )
 
-    experiment_builder.load(hparams, checkpoint, class_weights=weights)
+    experiment_builder.create(hparams, checkpoint)
 
     logger = TensorBoardLogger(version=version_name,
                                save_dir="./",
