@@ -94,7 +94,7 @@ class Classifier(pl.LightningModule):
 
     def training_step(self, train_batch, batch_idx):
         x, y = train_batch
-        class_counts = Counter(list(y.numpy()))
+        class_counts = Counter(list(y.detach().cpu().numpy()))
         logits = self.forward(x)
         loss = self.loss(logits, y)
         self.train_acc(logits, y)
