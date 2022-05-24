@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 
 from subset import Subset
 
+
 def setup_data(hparams):
     # This somehow makes the performance terrible.
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -32,15 +33,18 @@ def setup_data(hparams):
     val_data = Subset(dataset, val_data_idx)
     return train_data, val_data, weights
 
+
 def get_train_transforms(flags=None):
     if flags is None:
         # Default transforms
-        transforms = nn.Sequential(
-                        transforms.RandomHorizontalFlip(),
-                        transforms.RandomVerticalFlip(),
-                        transforms.RandomRotation(degrees=(0, 180))
-                    )
-    transforms = nn.Sequential(*build_transform_list(flags))
+        data_transforms = nn.Sequential(
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.RandomRotation(degrees=(0, 180))
+        )
+    data_transforms = nn.Sequential(*build_transform_list(flags))
+    return data_transforms
+
 
 def build_transform_list(flags):
     transform_flags = flags.split(",")
@@ -56,6 +60,7 @@ def build_transform_list(flags):
         transforms_list.append(transform)
     return transforms_list
 
+
 def compute_weights(dataset):
     class_sample_count = np.unique(dataset.targets, return_counts=True)[1]
     weights = 1.0 / class_sample_count
@@ -63,6 +68,7 @@ def compute_weights(dataset):
     print(class_sample_count)
     print(weights_per_sample)
     return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()
+
 
 def setup_data_loaders(train_data, val_data, batch_size):
     _, weights_per_sample = compute_weights(train_data.dataset)
