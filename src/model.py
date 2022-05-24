@@ -126,12 +126,13 @@ class Classifier(pl.LightningModule):
         total_counts = Counter()
         for dict in outputs:
             total_counts += dict["class_counts"]
-        print(total_counts.most_common())
+        #print(total_counts.most_common())
     
     def validation_step(self, val_batch, batch_idx):
         x, y = val_batch
         logits = self.forward(x)
-
+        class_counts = Counter(list(y.detach().cpu().numpy()))
+        print(class_counts.most_common())
         #loss = self.loss(logits, y)
         self.val_acc(logits, y)
         val_acc_per_class = self.val_acc_per_class(logits, y)
@@ -153,13 +154,14 @@ class Classifier(pl.LightningModule):
         return y, preds
 
     def validation_epoch_end(self, validation_step_outputs):
+
         self.add_histogram()
         pred_step_tensors = []
         target__step_tensors = []
-
         for tuple in validation_step_outputs:
             target__step_tensors.append(tuple[0])
             pred_step_tensors.append(tuple[1])
+
         concat_targets = torch.cat(target__step_tensors)
         stacked_preds = torch.vstack(pred_step_tensors)
         
