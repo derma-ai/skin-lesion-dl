@@ -34,6 +34,7 @@ def train(hparams,
 
     model = experiment_builder.ExperimentBuilder(
         extractor_type=hparams["m"],
+        loss=hparams["l"],
         num_classes=hparams["c"],
         learning_rate=hparams["lr"],
         class_weights=weights
@@ -72,6 +73,8 @@ def main():
                         default="", dest="model", help="Model name")
     parser.add_argument("-t", "--transforms", type=str, default=None, dest="transforms",
                         help="Comma separated list of transform flags, e.g. /'r,hflip,vflip/'")
+    parser.add_argument("-l", "--loss", type=str, default="ce", dest="loss",
+                        help="Loss function'")
     parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
                         dest="checkpoint", help="Call model from checkpoint by version name")
     args = parser.parse_args()
@@ -82,7 +85,8 @@ def main():
         "lr": args.learning_rate,
         "wd": args.weight_decay,
         "m": args.model,
-        "t": args.transforms
+        "t": args.transforms,
+        "l": args.loss
     }
 
     set_seed()
