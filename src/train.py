@@ -1,22 +1,13 @@
 from argparse import ArgumentParser
-from pyparsing import string
 import os
-
 
 import pytorch_lightning as pl
 import numpy as np
 import torch
-import torch.nn as nn
-from torch.utils.data.sampler import WeightedRandomSampler
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
 from pytorch_lightning.loggers import TensorBoardLogger
-from sklearn.model_selection import train_test_split
-from torchsummary import summary
-import glob
 
-from subset import Subset
-import model_loader
+from experiment_builder import ExperimentBuilder
+import data_handler
 
 
 def set_seed(seed=15):
@@ -30,78 +21,26 @@ def set_seed(seed=15):
     torch.backends.cudnn.deterministic = True
 
 
-def setup_data():
-    # This somehow makes the performance terrible.
-    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
-    base_transforms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Resize((224, 224))
-    ]
-    )
-
-    train_transform = nn.Sequential(
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
-        transforms.RandomRotation(degrees=(0, 180))
-    )
-
-    root = os.path.join("/", "space", "derma-data")
-    dataset = datasets.ImageFolder(root, base_transforms)
-
-    train_data_idx, val_data_idx = train_test_split(
-        list(range(len(dataset))), test_size=0.2, stratify=dataset.targets)
-    weights, _ = compute_weights(dataset)
-    train_data = Subset(dataset, train_data_idx, train_transform)
-    val_data = Subset(dataset, val_data_idx)
-    return train_data, val_data, weights
-
-
-def compute_weights(dataset):
-    class_sample_count = np.unique(dataset.targets, return_counts=True)[1]
-    weights = 1.0 / class_sample_count
-    weights_per_sample = np.array([weights[t] for t in dataset.targets])
-    print(class_sample_count)
-    print(weights_per_sample)
-    return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()
-
-
-def setup_data_loaders(train_data, val_data, batch_size):
-    _, weights_per_sample = compute_weights(train_data.dataset)
-    weights_per_sample = weights_per_sample[train_data.indices]
-    # Test oversampling with factor 1.5
-    weighted_sampler = WeightedRandomSampler(
-        weights=weights_per_sample, num_samples=int(len(train_data) * 1.5))
-    train_loader = torch.utils.data.DataLoader(train_data,
-                                               batch_size=batch_size,
-                                               sampler=weighted_sampler,
-                                               num_workers=8,
-                                               drop_last=False,
-                                               timeout=30000,
-                                               pin_memory=True)
-
-    val_loader = torch.utils.data.DataLoader(val_data,
-                                             batch_size=batch_size,
-                                             num_workers=8,
-                                             drop_last=False,
-                                             shuffle=False,
-                                             timeout=30000,
-                                             pin_memory=True)
-    return train_loader, val_loader
-
-
 def train(hparams,
           version_name,
           checkpoint=None):
 
-    train_data, val_data, weights = setup_data()
+    train_data, val_data, weights = data_handler.setup_data(hparams)
 
     hparams["c"] = len(train_data.classes)
-    train_loader, val_loader = setup_data_loaders(
+    train_loader, val_loader = data_handler.setup_data_loaders(
         train_data, val_data, hparams["b"])
     print(len(train_loader), len(val_loader))
 
-    model = model_loader.load(hparams, checkpoint, class_weights=weights)
+    builder = ExperimentBuilder(
+        extractor_type=hparams["m"],
+        loss=hparams["l"],
+        num_classes=hparams["c"],
+        learning_rate=hparams["lr"],
+        class_weights=weights
+    )
+
+    model = builder.create(checkpoint)
 
     logger = TensorBoardLogger(version=version_name,
                                save_dir="./",
@@ -132,6 +71,10 @@ def main():
                         default="", dest="experiment_name", help="Experiment name")
     parser.add_argument('-m', '--model', type=str,
                         default="", dest="model", help="Model name")
+    parser.add_argument("-t", "--transforms", type=str, default=None, dest="transforms",
+                        help="Comma separated list of transform flags, e.g. /'r,hflip,vflip/'")
+    parser.add_argument("-l", "--loss", type=str, default="ce", dest="loss",
+                        help="Loss function'")
     parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
                         dest="checkpoint", help="Call model from checkpoint by version name")
     args = parser.parse_args()
@@ -141,7 +84,9 @@ def main():
         "b": args.batch_size,
         "lr": args.learning_rate,
         "wd": args.weight_decay,
-        "m": args.model
+        "m": args.model,
+        "t": args.transforms,
+        "l": args.loss
     }
 
     set_seed()
