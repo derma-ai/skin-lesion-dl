@@ -95,15 +95,12 @@ class Classifier(pl.LightningModule):
     def training_step(self, train_batch, batch_idx):
         x, y = train_batch
         class_counts = Counter(y)
-        print("Current batch classes:", class_counts)
         logits = self.forward(x)
         loss = self.loss(logits, y)
         self.train_acc(logits, y)
         train_acc_per_class = self.train_acc_per_class(logits,y)
         train_prec_per_class = self.train_prec_per_class(logits,y)
         train_rec_per_class = self.train_rec_per_class(logits,y)
-
-
 
         self.log('train_loss',
                  loss,
@@ -123,7 +120,13 @@ class Classifier(pl.LightningModule):
         self.log_per_class(mode="train", metric="prec", values=train_prec_per_class)
         self.log_per_class(mode="train", metric="rec", values=train_rec_per_class)
 
-        return loss
+        return loss, class_counts
+    
+    def training_epoch_end(self, outputs) -> None:
+        total_counts = Counter()
+        for tuple in outputs:
+            total_counts += tuple[1]
+        print(total_counts.most_common())
     
     def validation_step(self, val_batch, batch_idx):
         x, y = val_batch
