@@ -94,8 +94,7 @@ class Classifier(pl.LightningModule):
 
     def training_step(self, train_batch, batch_idx):
         x, y = train_batch
-        print("Classes y:", y)
-        class_counts = Counter(y)
+        class_counts = Counter(list(y))
         logits = self.forward(x)
         loss = self.loss(logits, y)
         self.train_acc(logits, y)
@@ -127,7 +126,7 @@ class Classifier(pl.LightningModule):
         total_counts = Counter()
         for dict in outputs:
             total_counts += dict["class_counts"]
-        print(type(total_counts))
+        print(total_counts.most_common())
     
     def validation_step(self, val_batch, batch_idx):
         x, y = val_batch
