@@ -40,7 +40,7 @@ def train(hparams,
         class_weights=weights
     )
 
-    model = builder.create(hparams, checkpoint)
+    model = builder.create(checkpoint)
 
     logger = TensorBoardLogger(version=version_name,
                                save_dir="./",
