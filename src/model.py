@@ -1,9 +1,11 @@
+from itertools import count
 import torch
 import torch.nn as nn
 import torchmetrics
 import torchvision
 import torchvision.models as models
 import pytorch_lightning as pl
+from collections import Counter
 import seaborn as sns
 from torchsummary import summary
 
@@ -92,7 +94,8 @@ class Classifier(pl.LightningModule):
 
     def training_step(self, train_batch, batch_idx):
         x, y = train_batch
-
+        class_counts = Counter(y)
+        print("Current batch classes:", class_counts)
         logits = self.forward(x)
         loss = self.loss(logits, y)
         self.train_acc(logits, y)
@@ -121,7 +124,7 @@ class Classifier(pl.LightningModule):
         self.log_per_class(mode="train", metric="rec", values=train_rec_per_class)
 
         return loss
-
+    
     def validation_step(self, val_batch, batch_idx):
         x, y = val_batch
         logits = self.forward(x)
