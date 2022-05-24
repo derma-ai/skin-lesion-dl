@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 import os
 
-
 import pytorch_lightning as pl
 import numpy as np
 import torch
@@ -21,6 +20,7 @@ def set_seed(seed=15):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
 
+
 def train(hparams,
           version_name,
           checkpoint=None):
@@ -32,9 +32,13 @@ def train(hparams,
         train_data, val_data, hparams["b"])
     print(len(train_loader), len(val_loader))
 
+    model = experiment_builder.ExperimentBuilder(
+        model_name=hparams["m"],
+        num_classes=hparams["c"],
+        learning_rate=hparams["lr"]
 
-    model = experiment_builder.ExperimentBuilder
-    
+    )
+
     experiment_builder.load(hparams, checkpoint, class_weights=weights)
 
     logger = TensorBoardLogger(version=version_name,
@@ -66,7 +70,8 @@ def main():
                         default="", dest="experiment_name", help="Experiment name")
     parser.add_argument('-m', '--model', type=str,
                         default="", dest="model", help="Model name")
-    parser.add_argument("-t", "--transforms", type="str", default=None, dest="transforms", help="Comma separated list of transform flags, e.g. /'r,hflip,vflip/'")
+    parser.add_argument("-t", "--transforms", type=str, default=None, dest="transforms",
+                        help="Comma separated list of transform flags, e.g. /'r,hflip,vflip/'")
     parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
                         dest="checkpoint", help="Call model from checkpoint by version name")
     args = parser.parse_args()
