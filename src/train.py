@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from pytorch_lightning.loggers import TensorBoardLogger
 
-import experiment_builder
+from experiment_builder import ExperimentBuilder
 import data_handler
 
 
@@ -32,7 +32,7 @@ def train(hparams,
         train_data, val_data, hparams["b"])
     print(len(train_loader), len(val_loader))
 
-    model = experiment_builder.ExperimentBuilder(
+    builder = ExperimentBuilder(
         extractor_type=hparams["m"],
         loss=hparams["l"],
         num_classes=hparams["c"],
@@ -40,7 +40,7 @@ def train(hparams,
         class_weights=weights
     )
 
-    experiment_builder.create(hparams, checkpoint)
+    model = builder.create(hparams, checkpoint)
 
     logger = TensorBoardLogger(version=version_name,
                                save_dir="./",
