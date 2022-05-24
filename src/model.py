@@ -160,7 +160,7 @@ class Classifier(pl.LightningModule):
             self.logger.experiment.add_histogram(
                 name, params, self.current_epoch)
 
-    def configure_matrics(self):
+    def configure_metrics(self):
         # training metrics
         self.train_acc = torchmetrics.Accuracy(
             num_classes=self.num_classes, average='macro')
