@@ -38,7 +38,7 @@ class ExperimentBuilder:
                 extractor=self.extractor,
                 classifier=self.classifier,
                 loss=self.loss,
-                num_classes=self.num_classes
+                num_classes=self.num_classes,
                 learning_rate=self.learning_rate,
                 weight_decay=self.weight_decay,
             )
