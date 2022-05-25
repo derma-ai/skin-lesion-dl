@@ -30,7 +30,6 @@ def train(hparams,
     hparams["c"] = len(train_data.classes)
     train_loader, val_loader = data_handler.setup_data_loaders(
         train_data, val_data, hparams["b"])
-    print(len(train_loader), len(val_loader))
 
     builder = ExperimentBuilder(
         extractor_type=hparams["m"],

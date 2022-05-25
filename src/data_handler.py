@@ -63,8 +63,6 @@ def compute_weights(dataset):
     class_sample_count = np.unique(dataset.targets, return_counts=True)[1]
     weights = 1.0 / class_sample_count
     weights_per_sample = np.array([weights[t] for t in dataset.targets])
-    print(class_sample_count)
-    print(weights_per_sample)
     return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()
 
 
