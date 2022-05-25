@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-from numpy import extract
-=======
-from itertools import count
->>>>>>> origin/logging
 import torch
 import torch.nn as nn
 import torchmetrics
@@ -12,7 +7,6 @@ import pytorch_lightning as pl
 from collections import Counter
 import seaborn as sns
 from torchsummary import summary
-
 
 class Classifier(pl.LightningModule):
     """
@@ -73,7 +67,6 @@ class Classifier(pl.LightningModule):
 
     def training_step(self, train_batch, batch_idx):
         x, y = train_batch
-        class_counts = Counter(list(y.detach().cpu().numpy()))
         logits = self.forward(x)
         loss = self.loss(logits, y)
         self.train_acc(logits, y)
@@ -102,20 +95,11 @@ class Classifier(pl.LightningModule):
         self.log_per_class(mode="train", metric="rec",
                            values=train_rec_per_class)
 
-        return {"loss":loss, "class_counts": class_counts}
-    
-    def training_epoch_end(self, outputs) -> None:
-        total_counts = Counter()
-        for dict in outputs:
-            total_counts += dict["class_counts"]
-        #print(total_counts.most_common())
-    
+        return loss
+
     def validation_step(self, val_batch, batch_idx):
         x, y = val_batch
         logits = self.forward(x)
-        class_counts = Counter(list(y.detach().cpu().numpy()))
-        print(class_counts.most_common())
-        #loss = self.loss(logits, y)
         self.val_acc(logits, y)
 
         self.log('val_acc',
@@ -134,12 +118,12 @@ class Classifier(pl.LightningModule):
         pred_step_tensors = []
         target__step_tensors = []
         for tuple in validation_step_outputs:
-            
             target__step_tensors.append(tuple[0])
             pred_step_tensors.append(tuple[1])
 
         concat_targets = torch.cat(target__step_tensors)
         stacked_preds = torch.vstack(pred_step_tensors)
+
         val_acc_per_class = self.val_acc_per_class(stacked_preds,concat_targets)
         val_prec_per_class = self.val_prec_per_class( stacked_preds, concat_targets)
         val_rec_per_class = self.val_rec_per_class(stacked_preds,concat_targets)
