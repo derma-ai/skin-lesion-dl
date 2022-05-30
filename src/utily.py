@@ -91,7 +91,7 @@ def compute_loader(dataset):
     mean = torch.zeros(3)
     variance = torch.zeros(3)
     loader = DataLoader(dataset, batch_size=64, num_workers=8)
-    pixels_per_channel = batch[0].shape[1] * dataset[idx][0].shape[2]
+    pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
 
     for batch in loader:
         mean += batch[0].mean(dim=[0,2,3])
