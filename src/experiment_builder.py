@@ -95,7 +95,7 @@ class ExperimentBuilder:
 
     def configure_loss(self):
         if self.loss_name == "wce":
-        print("Using weighted ce loss")
+            print("Using weighted ce loss")
             return nn.CrossEntropyLoss(weight=self.class_weights)
         if self.loss_name == "ce":
             print("Using standard ce loss")
