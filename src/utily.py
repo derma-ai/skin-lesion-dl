@@ -40,8 +40,8 @@ def compute_samples_per_class(dataset):
     return class_sample_count
 
 def print_samples_per_class(samples_per_class, dataset):
-    print(f"Dataset contains a total of {len(dataset.targets)}, the samples are distributed over the classes in the following way:")
-    for class_name, sample_count in zip(samples_per_class, dataset.class_to_idx.keys()):
+    print(f"Dataset contains a total of {len(dataset.classes)}, the samples are distributed over the classes in the following way:")
+    for class_name, sample_count in zip(dataset.classes, samples_per_class):
         print(f"{class_name}: {sample_count}")
 
 if __name__ == "__main__":
