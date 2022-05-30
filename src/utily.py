@@ -26,7 +26,7 @@ def main():
     samples_per_class = compute_samples_per_class(dataset)
     print_samples_per_class(samples_per_class, dataset)
 
-    per_channel_mean, per_channel_variance = compute_per_channel_statistics(dataset)
+    per_channel_mean, per_channel_variance = compute_per_channel_mean_variance(dataset)
 
 def setup_dataset():
     base_transforms = transforms.Compose([
@@ -48,18 +48,8 @@ def print_samples_per_class(samples_per_class, dataset):
     for class_name, sample_count in zip(dataset.classes, samples_per_class):
         print(f"{class_name}: {sample_count}")
     
-def compute_per_channel_statistics(dataset):
-    start_loader_gpu = torch.cuda.Event(enable_timing=True)
-    end_loader_gpu = torch.cuda.Event(enable_timing=True)
-    
-    print("Start GPU computation")
-    # Issue: Black borders in some images will influence mean even though they provide no real information, we should remove the black borders!
-    start_loader_gpu.record()
+def compute_per_channel_mean_variance(dataset):
     mean, variance = compute_loader_gpu(dataset, 'cuda:1')
-    end_loader_gpu.record()
-    torch.cuda.synchronize()
-
-    print(f"Time required with dataloader and gpu: {start_loader_gpu.elapsed_time(end_loader_gpu)}")
     return mean, variance
 
 def compute_loader_gpu(dataset, device):
