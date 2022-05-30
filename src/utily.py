@@ -78,7 +78,7 @@ def compute_per_channel_statistics(dataset):
 
 def compute_simple(dataset):
     mean = torch.zeros(3)
-    pixels_per_channel = dataset[idx][0].shape[1] * dataset[idx][0].shape[2]
+    pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
     variance = torch.zeros(3)
     for idx in range(len(dataset)):
         mean += dataset[idx][0].mean(dim=[1,2])
