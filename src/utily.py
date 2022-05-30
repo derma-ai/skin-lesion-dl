@@ -77,5 +77,5 @@ def print_mean_variance_per_channel(per_channel_mean, per_channel_variance):
     print(f"We have a per channel variance of: {per_channel_variance}")
 
 if __name__ == "__main__":
-    device = "cuda:1"
+    device = "cuda:2"
     main(device)
