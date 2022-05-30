@@ -56,12 +56,12 @@ def compute_per_channel_statistics(dataset):
     start_loader_gpu = torch.cuda.Event(enable_timing=True)
     end_loader_gpu = torch.cuda.Event(enable_timing=True)
     
-    start_no_loader.record()
-    mean, variance = compute_simple(dataset)
-    end_no_loader.record()
+    #start_no_loader.record()
+    #mean, variance = compute_simple(dataset)
+    #end_no_loader.record()
 
     start_loader_cpu.record()
-    #mean, variance = compute_loader(dataset)
+    mean, variance = compute_loader(dataset)
     end_loader_cpu.record()
 
     print("Start GPU computation")
