@@ -31,6 +31,7 @@ class ExperimentBuilder:
         self.classifier = nn.Linear(
             layers[-1][1].in_features, self.num_classes)
         self.loss = self.configure_loss()
+        print(f"Using loss: {self.loss}")
 
     def create(self, checkpoint):
         if(checkpoint is None):
