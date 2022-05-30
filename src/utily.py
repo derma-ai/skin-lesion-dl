@@ -64,6 +64,8 @@ def compute_per_channel_statistics(dataset):
     mean, variance = compute_loader(dataset)
     end_loader_cpu.record()
 
+    print("Start GPU computation")
+
     start_loader_gpu.record()
     mean, variance = compute_loader_gpu(dataset, 'cuda:4')
     end_loader_gpu.record()
