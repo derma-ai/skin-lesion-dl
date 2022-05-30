@@ -71,12 +71,14 @@ def compute_simple(dataset):
     print("Tensor shape: ", dataset[0][0].shape)
     mean = torch.zeros(3)
     variance = torch.zeros(3)
-    for idx in len(dataset):
+    for idx in range(len(dataset)):
         mean += dataset[idx][0].mean(dim=[1,2])
     mean = mean / len(dataset)
-    for idx in len(dataset):
-        variance +=  (dataset[idx][0] - mean).pow(2).sum(dim=[1,2])
-
+    for idx in range(len(dataset)):
+        pixels_per_channel = dataset[idx][0].shape[1] * dataset[idx][0].shape[2]
+        variance +=  (dataset[idx][0] - mean).pow(2).sum(dim=[1,2]) / pixels_per_channel
+    variance = variance / len(dataset)
+    return mean, variance
 
 def compute_loader(dataset):
     mean = 0
