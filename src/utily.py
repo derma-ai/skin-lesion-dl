@@ -58,18 +58,16 @@ def compute_per_channel_statistics(dataset):
     
     start_no_loader.record()
     mean, variance = compute_simple(dataset)
-    torch.cuda.synchronize()
     end_no_loader.record()
 
     start_loader_cpu.record()
     mean, variance = compute_loader(dataset)
-    torch.cuda.synchronize()
     end_loader_cpu.record()
 
     start_loader_gpu.record()
-    mean, variance = compute_loader_gpu(dataset)
-    torch.cuda.synchronize()
+    mean, variance = compute_loader_gpu(dataset, 'cuda:4')
     end_loader_gpu.record()
+    torch.cuda.synchronize()
 
     print(f"Time required without dataloader: {start_no_loader.elapsed_time(end_no_loader)}")
     print(f"Time required with dataloader and cpu: {start_loader_cpu.elapsed_time(end_loader_cpu)}")
