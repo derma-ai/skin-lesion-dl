@@ -73,7 +73,7 @@ def compute_per_channel_statistics(dataset):
 
     print(f"Time required without dataloader: {start_no_loader.elapsed_time(end_no_loader)}")
     print(f"Time required with dataloader and cpu: {start_loader_cpu.elapsed_time(end_loader_cpu)}")
-    print(f"Time required with dataloader and gpu: {start_loader_gpu.elapsed_time(end_loader_gpu)}")`
+    print(f"Time required with dataloader and gpu: {start_loader_gpu.elapsed_time(end_loader_gpu)}")
     return mean, variance
 
 def compute_simple(dataset):
