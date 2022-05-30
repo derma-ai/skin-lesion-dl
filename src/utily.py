@@ -109,13 +109,12 @@ def compute_loader_gpu(dataset, device):
     pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
 
     for batch_idx, (x, y) in enumerate(loader):
-        x.to(device)
-        print(x.mean(dim=[0,2,3]).device)
+        x = x.to(device)
         mean += x.mean(dim=[0,2,3])
     mean = mean / len(dataset)
     mean = mean.to(device)
     for batch_idx, (x,y) in enumerate(loader):
-        x.to(device)
+        x = x.to(device)
         variance +=  (x - mean[:, None, None]).pow(2).sum(dim=[0,2,3]) / pixels_per_channel
     variance = variance / len(dataset)
     mean = mean.cpu()
