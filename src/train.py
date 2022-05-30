@@ -74,7 +74,7 @@ def main():
                         help="Comma separated list of transform flags, e.g. /'r,hflip,vflip/'")
     parser.add_argument("-osr", "--over_sampling_rate", type=float, default=1, dest="osr",
                         help="How many multiples of dataset size should be oversampled using a weighted sampler. At 1, no oversampling or weighted sampling is done.")
-    parser.add_argument("-l", "--loss", type=str, default="ce", dest="loss",
+    parser.add_argument("-l", "--loss", type=str, default="", dest="loss",
                         help="Loss function'")
     parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
                         dest="checkpoint", help="Call model from checkpoint by version name")

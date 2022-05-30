@@ -21,6 +21,7 @@ def setup_data(hparams):
     )
 
     train_transform = get_train_transforms(hparams["t"])
+    print(f"Trainig transforms: {train_transform}")
 
     root = os.path.join("/", "space", "derma-data")
     dataset = datasets.ImageFolder(root, base_transforms)
@@ -62,8 +63,6 @@ def compute_weights(dataset):
 
 
 def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate):
-    _, weights_per_sample = compute_weights(train_data.dataset)
-    weights_per_sample = weights_per_sample[train_data.indices]
     if (over_sampling_rate <= 1):
         train_loader = torch.utils.data.DataLoader(train_data,
                                                 batch_size=batch_size,
@@ -72,6 +71,9 @@ def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate):
                                                 timeout=30000,
                                                 pin_memory=True)
     else:
+        print("Use oversampling and weighted sampler")
+        _, weights_per_sample = compute_weights(train_data.dataset)
+        weights_per_sample = weights_per_sample[train_data.indices]
         weighted_sampler = WeightedRandomSampler(
             weights=weights_per_sample, num_samples=int(len(train_data) * over_sampling_rate))
         train_loader = torch.utils.data.DataLoader(train_data,
