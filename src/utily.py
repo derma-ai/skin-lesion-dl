@@ -61,7 +61,7 @@ def compute_per_channel_statistics(dataset):
     # end_no_loader.record()
 
     start_loader_cpu.record()
-    mean, variance = compute_loader(dataset)
+    #mean, variance = compute_loader(dataset)
     end_loader_cpu.record()
 
     print("Start GPU computation")
@@ -112,6 +112,7 @@ def compute_loader_gpu(dataset, device):
         x.to(device)
         mean += x.mean(dim=[0,2,3])
     mean = mean / len(dataset)
+    mean = mean.to(device)
     for batch_idx, (x,y) in enumerate(loader):
         x.to(device)
         variance +=  (x - mean[:, None, None]).pow(2).sum(dim=[0,2,3]) / pixels_per_channel
