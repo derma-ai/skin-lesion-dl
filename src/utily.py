@@ -57,23 +57,24 @@ def compute_per_channel_statistics(dataset):
     end_loader_gpu = torch.cuda.Event(enable_timing=True)
     
     start_no_loader.record()
-    # compute_simple(dataset)
+    mean, variance = compute_simple(dataset)
     torch.cuda.synchronize()
     end_no_loader.record()
 
     start_loader_cpu.record()
-    compute_loader(dataset)
+    mean, variance = compute_loader(dataset)
     torch.cuda.synchronize()
     end_loader_cpu.record()
 
     start_loader_gpu.record()
-    compute_loader_gpu(dataset)
+    mean, variance = compute_loader_gpu(dataset)
     torch.cuda.synchronize()
     end_loader_gpu.record()
 
     print(f"Time required without dataloader: {start_no_loader.elapsed_time(end_no_loader)}")
     print(f"Time required with dataloader and cpu: {start_loader_cpu.elapsed_time(end_loader_cpu)}")
-    print(f"Time required with dataloader and gpu: {start_loader_gpu.elapsed_time(end_loader_gpu)}")
+    print(f"Time required with dataloader and gpu: {start_loader_gpu.elapsed_time(end_loader_gpu)}")`
+    return mean, variance
 
 def compute_simple(dataset):
     mean = torch.zeros(3)
@@ -94,9 +95,6 @@ def compute_loader(dataset):
     pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
 
     for batch_idx, batch in enumerate(loader):
-        if batch_idx == 0:
-            print(batch)
-            print(batch[0].shape)  
         mean += batch[0].mean(dim=[0,2,3])
     mean = mean / len(dataset)
     for batch_idx, batch in enumerate(loader):
@@ -104,8 +102,23 @@ def compute_loader(dataset):
     variance = variance / len(dataset)
     return mean, variance
 
-def compute_loader_gpu(dataset):
-    mean = 0
+def compute_loader_gpu(dataset, device):
+    mean = torch.zeros(3).to(device)
+    variance = torch.zeros(3).to(device)
+    loader = DataLoader(dataset, batch_size=64, num_workers=8)
+    pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
+
+    for batch_idx, batch in enumerate(loader):
+        batch.to(device)
+        mean += batch[0].mean(dim=[0,2,3])
+    mean = mean / len(dataset)
+    for batch_idx, batch in enumerate(loader):
+        batch.to(device)
+        variance +=  (batch[0] - mean[:, None, None]).pow(2).sum(dim=[0,2,3]) / pixels_per_channel
+    variance = variance / len(dataset)
+    mean = mean.cpu()
+    variance = variance.cpu()
+    return mean, variance
 
 if __name__ == "__main__":
     main()
