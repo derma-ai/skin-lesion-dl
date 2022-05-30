@@ -110,6 +110,7 @@ def compute_loader_gpu(dataset, device):
 
     for batch_idx, (x, y) in enumerate(loader):
         x.to(device)
+        print(x.mean(dim=[0,2,3]).device)
         mean += x.mean(dim=[0,2,3])
     mean = mean / len(dataset)
     mean = mean.to(device)
