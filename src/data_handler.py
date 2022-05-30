@@ -35,7 +35,7 @@ def setup_data(hparams):
 
 
 def get_train_transforms(flags=None):
-    if flags is None:
+    if flags is None or len(flags) == 0:
         # Default transforms
         return None
     return nn.Sequential(*build_transform_list(flags))
