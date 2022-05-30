@@ -67,7 +67,7 @@ def compute_per_channel_statistics(dataset):
     print("Start GPU computation")
 
     start_loader_gpu.record()
-    mean, variance = compute_loader_gpu(dataset, 'cuda:4')
+    mean, variance = compute_loader_gpu(dataset, 'cuda:1')
     end_loader_gpu.record()
     torch.cuda.synchronize()
 
@@ -108,13 +108,13 @@ def compute_loader_gpu(dataset, device):
     loader = DataLoader(dataset, batch_size=64, num_workers=8)
     pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
 
-    for batch_idx, batch in enumerate(loader):
-        batch.to(device)
-        mean += batch[0].mean(dim=[0,2,3])
+    for batch_idx, (x, y) in enumerate(loader):
+        x.to(device)
+        mean += x.mean(dim=[0,2,3])
     mean = mean / len(dataset)
-    for batch_idx, batch in enumerate(loader):
-        batch.to(device)
-        variance +=  (batch[0] - mean[:, None, None]).pow(2).sum(dim=[0,2,3]) / pixels_per_channel
+    for batch_idx, (x,y) in enumerate(loader):
+        x.to(device)
+        variance +=  (x - mean[:, None, None]).pow(2).sum(dim=[0,2,3]) / pixels_per_channel
     variance = variance / len(dataset)
     mean = mean.cpu()
     variance = variance.cpu()
