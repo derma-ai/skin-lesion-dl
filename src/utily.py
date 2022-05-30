@@ -93,10 +93,12 @@ def compute_loader(dataset):
     loader = DataLoader(dataset, batch_size=64, num_workers=8)
     pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
 
-    for batch in loader:
+    for batch_idx, batch in enumerate(loader):
+        if batch_idx == 0:
+            print(batch.shape)  
         mean += batch[0].mean(dim=[0,2,3])
     mean = mean / len(dataset)
-    for batch in loader:
+    for batch_idx, batch in enumerate(loader):
         variance +=  (batch - mean).pow(2).sum(dim=[1,2]) / pixels_per_channel
     variance = variance / len(dataset)
     return mean, variance
