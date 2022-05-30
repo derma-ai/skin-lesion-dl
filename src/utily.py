@@ -65,7 +65,7 @@ def compute_per_channel_statistics(dataset):
 def compute_loader_gpu(dataset, device):
     mean = torch.zeros(3).to(device)
     variance = torch.zeros(3).to(device)
-    loader = DataLoader(dataset, batch_size=1, num_workers=40)
+    loader = DataLoader(dataset, batch_size=32, num_workers=40)
     pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
 
     for batch_idx, (x, y) in enumerate(loader):
