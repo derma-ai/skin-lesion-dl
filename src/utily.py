@@ -76,36 +76,10 @@ def compute_per_channel_statistics(dataset):
     print(f"Time required with dataloader and gpu: {start_loader_gpu.elapsed_time(end_loader_gpu)}")
     return mean, variance
 
-def compute_simple(dataset):
-    mean = torch.zeros(3)
-    pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
-    variance = torch.zeros(3)
-    for idx in range(len(dataset)):
-        mean += dataset[idx][0].mean(dim=[1,2])
-    mean = mean / len(dataset)
-    for idx in range(len(dataset)):
-        variance +=  (dataset[idx][0] - mean).pow(2).sum(dim=[1,2]) / pixels_per_channel
-    variance = variance / len(dataset)
-    return mean, variance
-
-def compute_loader(dataset):
-    mean = torch.zeros(3)
-    variance = torch.zeros(3)
-    loader = DataLoader(dataset, batch_size=64, num_workers=40)
-    pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
-
-    for batch_idx, batch in enumerate(loader):
-        mean += batch[0].mean(dim=[0,2,3])
-    mean = mean / len(dataset)
-    for batch_idx, batch in enumerate(loader):
-        variance +=  (batch[0] - mean[:, None, None]).pow(2).sum(dim=[0,2,3]) / pixels_per_channel
-    variance = variance / len(dataset)
-    return mean, variance
-
 def compute_loader_gpu(dataset, device):
     mean = torch.zeros(3).to(device)
     variance = torch.zeros(3).to(device)
-    loader = DataLoader(dataset, batch_size=64, num_workers=40)
+    loader = DataLoader(dataset, batch_size=32, num_workers=40)
     pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
 
     for batch_idx, (x, y) in enumerate(loader):
