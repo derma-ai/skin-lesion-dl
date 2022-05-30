@@ -58,14 +58,14 @@ def compute_per_channel_statistics(dataset):
     mean, variance = compute_loader_gpu(dataset, 'cuda:1')
     end_loader_gpu.record()
     torch.cuda.synchronize()
-    
+
     print(f"Time required with dataloader and gpu: {start_loader_gpu.elapsed_time(end_loader_gpu)}")
     return mean, variance
 
 def compute_loader_gpu(dataset, device):
     mean = torch.zeros(3).to(device)
     variance = torch.zeros(3).to(device)
-    loader = DataLoader(dataset, batch_size=32, num_workers=40)
+    loader = DataLoader(dataset, batch_size=256, num_workers=8)
     pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
 
     for batch_idx, (x, y) in enumerate(loader):
