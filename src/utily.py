@@ -65,7 +65,7 @@ def compute_per_channel_statistics(dataset):
     end_loader_cpu.record()
 
     print("Start GPU computation")
-
+    # Issue: Black borders in some images will influence mean even though they provide no real information, we should remove the black borders!
     start_loader_gpu.record()
     mean, variance = compute_loader_gpu(dataset, 'cuda:1')
     end_loader_gpu.record()
@@ -91,7 +91,7 @@ def compute_simple(dataset):
 def compute_loader(dataset):
     mean = torch.zeros(3)
     variance = torch.zeros(3)
-    loader = DataLoader(dataset, batch_size=64 * 8, num_workers=8)
+    loader = DataLoader(dataset, batch_size=64, num_workers=8)
     pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
 
     for batch_idx, batch in enumerate(loader):
@@ -105,7 +105,7 @@ def compute_loader(dataset):
 def compute_loader_gpu(dataset, device):
     mean = torch.zeros(3).to(device)
     variance = torch.zeros(3).to(device)
-    loader = DataLoader(dataset, batch_size=64, num_workers=8)
+    loader = DataLoader(dataset, batch_size=64 * 8, num_workers=8)
     pixels_per_channel = dataset[0][0].shape[1] * dataset[0][0].shape[2]
 
     for batch_idx, (x, y) in enumerate(loader):
