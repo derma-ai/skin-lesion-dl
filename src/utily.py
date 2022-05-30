@@ -21,12 +21,13 @@ def compute_existing_resolutions():
 
 
 
-def main():
+def main(device):
     dataset = setup_dataset()
     samples_per_class = compute_samples_per_class(dataset)
     print_samples_per_class(samples_per_class, dataset)
 
-    per_channel_mean, per_channel_variance = compute_per_channel_mean_variance(dataset)
+    per_channel_mean, per_channel_variance = compute_per_channel_mean_variance(dataset, device)
+    print_mean_variance_per_channel(per_channel_mean, per_channel_variance)
 
 def setup_dataset():
     base_transforms = transforms.Compose([
@@ -48,8 +49,8 @@ def print_samples_per_class(samples_per_class, dataset):
     for class_name, sample_count in zip(dataset.classes, samples_per_class):
         print(f"{class_name}: {sample_count}")
     
-def compute_per_channel_mean_variance(dataset):
-    mean, variance = compute_loader_gpu(dataset, 'cuda:1')
+def compute_per_channel_mean_variance(dataset, device):
+    mean, variance = compute_loader_gpu(dataset, device)
     return mean, variance
 
 def compute_loader_gpu(dataset, device):
@@ -71,5 +72,10 @@ def compute_loader_gpu(dataset, device):
     variance = variance.cpu()
     return mean, variance
 
+def print_mean_variance_per_channel(per_channel_mean, per_channel_variance):
+    print(f"We have a per channel mean of: {per_channel_mean}")
+    print(f"We have a per channel variance of: {per_channel_variance}")
+
 if __name__ == "__main__":
-    main()
+    device = "cuda:1"
+    main(device)
