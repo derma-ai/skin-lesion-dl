@@ -21,8 +21,7 @@ def compute_existing_resolutions():
 def main():
     dataset = setup_dataset()
     samples_per_class = compute_samples_per_class(dataset)
-    print(samples_per_class)
-    print(dataset.class_to_idx)
+    print_samples_per_class(samples_per_class, dataset)
 
 
 def setup_dataset():
@@ -39,6 +38,11 @@ def setup_dataset():
 def compute_samples_per_class(dataset):
     class_sample_count = np.unique(dataset.targets, return_counts=True)[1]
     return class_sample_count
+
+def print_samples_per_class(samples_per_class, dataset):
+    print(f"Dataset contains a total of {len(dataset.targets)}, the samples are distributed over the classes in the following way:")
+    for class_name, sample_count in zip(samples_per_class, dataset.class_to_idx.keys()):
+        print(f"{class_name}: {sample_count}")
 
 if __name__ == "__main__":
     main()
