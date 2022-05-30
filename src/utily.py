@@ -1,5 +1,7 @@
 import os
+from statistics import variance
 import numpy as np
+import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
@@ -23,6 +25,7 @@ def main():
     samples_per_class = compute_samples_per_class(dataset)
     print_samples_per_class(samples_per_class, dataset)
 
+    per_channel_mean, per_channel_variance = compute_per_channel_statistics(dataset)
 
 def setup_dataset():
     base_transforms = transforms.Compose([
@@ -40,9 +43,46 @@ def compute_samples_per_class(dataset):
     return class_sample_count
 
 def print_samples_per_class(samples_per_class, dataset):
-    print(f"Dataset contains a total of {len(dataset.classes)}, the samples are distributed over the classes in the following way:")
+    print(f"Dataset contains a total of {len(dataset.classes)} classes, the samples are distributed over the classes in the following way:")
     for class_name, sample_count in zip(dataset.classes, samples_per_class):
         print(f"{class_name}: {sample_count}")
+    
+def compute_per_channel_statistics(dataset):
+    start_no_loader = torch.cuda.Event(enable_timing=True)
+    end_no_loader = torch.cuda.Event(enable_timing=True)
+    start_loader_cpu = torch.cuda.Event(enable_timing=True)
+    end_loader_cpu = torch.cuda.Event(enable_timing=True)
+    start_loader_gpu = torch.cuda.Event(enable_timing=True)
+    end_loader_gpu = torch.cuda.Event(enable_timing=True)
+    
+    start_no_loader.record()
+    compute_simple(dataset)
+    end_no_loader.record()
+
+    start_loader_cpu.record()
+    compute_loader(dataset)
+    end_loader_cpu.record()
+
+    start_loader_gpu.record()
+    compute_loader_gpu(dataset)
+    end_loader_gpu.record()
+
+def compute_simple(dataset):
+    print("Tensor shape: ", dataset[0][0].shape)
+    mean = torch.zeros(3)
+    variance = torch.zeros(3)
+    for idx in len(dataset):
+        mean += dataset[idx][0].mean(dim=[1,2])
+    mean = mean / len(dataset)
+    for idx in len(dataset):
+        variance +=  (dataset[idx][0] - mean).pow(2).sum(dim=[1,2])
+
+
+def compute_loader(dataset):
+    mean = 0
+
+def compute_loader_gpu(dataset):
+    mean = 0
 
 if __name__ == "__main__":
     main()
