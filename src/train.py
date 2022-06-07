@@ -29,7 +29,7 @@ def train(hparams,
 
     hparams["c"] = len(train_data.classes)
     train_loader, val_loader = data_handler.setup_data_loaders(
-        train_data, val_data, hparams["b"])
+        train_data, val_data, hparams["b"], hparams["osr"])
 
     builder = ExperimentBuilder(
         extractor_type=hparams["m"],
@@ -72,7 +72,9 @@ def main():
                         default="", dest="model", help="Model name")
     parser.add_argument("-t", "--transforms", type=str, default=None, dest="transforms",
                         help="Comma separated list of transform flags, e.g. /'r,hflip,vflip/'")
-    parser.add_argument("-l", "--loss", type=str, default="ce", dest="loss",
+    parser.add_argument("-osr", "--over_sampling_rate", type=float, default=1, dest="osr",
+                        help="How many multiples of dataset size should be oversampled using a weighted sampler. At 1, no oversampling or weighted sampling is done.")
+    parser.add_argument("-l", "--loss", type=str, default="", dest="loss",
                         help="Loss function'")
     parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
                         dest="checkpoint", help="Call model from checkpoint by version name")
@@ -85,7 +87,8 @@ def main():
         "wd": args.weight_decay,
         "m": args.model,
         "t": args.transforms,
-        "l": args.loss
+        "l": args.loss,
+        "osr": args.osr
     }
 
     set_seed()

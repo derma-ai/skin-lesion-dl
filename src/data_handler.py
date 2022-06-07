@@ -10,14 +10,14 @@ from sklearn.model_selection import train_test_split
 
 from subset import Subset
 
-
 def setup_data(hparams):
     # This somehow makes the performance terrible.
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     base_transforms = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((224, 224))
+        transforms.Resize((224, 224)),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ]
     )
 
@@ -26,6 +26,7 @@ def setup_data(hparams):
         root = os.path.join(hparams['path'])
     else:    
         root = os.path.join("/", "space", "derma-data")
+    print(f"Trainig transforms: {train_transform}")
     dataset = datasets.ImageFolder(root, base_transforms)
 
     train_data_idx, val_data_idx = train_test_split(
@@ -37,13 +38,9 @@ def setup_data(hparams):
 
 
 def get_train_transforms(flags=None):
-    if flags is None:
+    if flags is None or len(flags) == 0:
         # Default transforms
-        return nn.Sequential(
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),
-            transforms.RandomRotation(degrees=(0, 180))
-        )
+        return None
     return nn.Sequential(*build_transform_list(flags))
 
 def build_transform_list(flags):
@@ -57,7 +54,7 @@ def build_transform_list(flags):
         elif flag == "hflip":
             transform = transforms.RandomHorizontalFlip()
             # add new cases here
-        transforms_list.append(transform)
+    transforms_list.append(transform)
     return transforms_list
 
 
@@ -68,19 +65,27 @@ def compute_weights(dataset):
     return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()
 
 
-def setup_data_loaders(train_data, val_data, batch_size):
-    _, weights_per_sample = compute_weights(train_data.dataset)
-    weights_per_sample = weights_per_sample[train_data.indices]
-    # Test oversampling with factor 1.5
-    weighted_sampler = WeightedRandomSampler(
-        weights=weights_per_sample, num_samples=int(len(train_data) * 1.5))
-    train_loader = torch.utils.data.DataLoader(train_data,
-                                               batch_size=batch_size,
-                                               sampler=weighted_sampler,
-                                               num_workers=8,
-                                               drop_last=False,
-                                               timeout=30000,
-                                               pin_memory=True)
+def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate):
+    if (over_sampling_rate <= 1):
+        train_loader = torch.utils.data.DataLoader(train_data,
+                                                batch_size=batch_size,
+                                                num_workers=8,
+                                                drop_last=False,
+                                                timeout=30000,
+                                                pin_memory=True)
+    else:
+        print("Use oversampling and weighted sampler")
+        _, weights_per_sample = compute_weights(train_data.dataset)
+        weights_per_sample = weights_per_sample[train_data.indices]
+        weighted_sampler = WeightedRandomSampler(
+            weights=weights_per_sample, num_samples=int(len(train_data) * over_sampling_rate))
+        train_loader = torch.utils.data.DataLoader(train_data,
+                                                batch_size=batch_size,
+                                                sampler=weighted_sampler,
+                                                num_workers=8,
+                                                drop_last=False,
+                                                timeout=30000,
+                                                pin_memory=True)
 
     val_loader = torch.utils.data.DataLoader(val_data,
                                              batch_size=batch_size,

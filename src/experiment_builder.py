@@ -64,6 +64,8 @@ class ExperimentBuilder:
         return model
 
     def get_model(self, pretrained=True):
+        if self.extractor_type == "efficientnet_b0":
+            return models.efficientnet_b0(pretrained)
         if self.extractor_type == "efficientnet_b1":
             return models.efficientnet_b1(pretrained)
         if self.extractor_type == "efficientnet_b2":
@@ -88,11 +90,15 @@ class ExperimentBuilder:
             return models.resnext50_32x4d(pretrained)
         if self.extractor_type == "resnext101_32x8d":
             return models.resnext101_32x8d(pretrained)
-        # Default:
+        print("No model with that name, defaulting to efficientnet_b0")
         return models.efficientnet_b0(pretrained)
 
     def configure_loss(self):
-        if not self.class_weights is None:
+        if self.loss_name == "wce":
+            print("Using weighted ce loss")
             return nn.CrossEntropyLoss(weight=self.class_weights)
-        # Default to CE loss
+        if self.loss_name == "ce":
+            print("Using standard ce loss")
+            return nn.CrossEntropyLoss()
+        print("No loss with that name, defaulting to CE Loss")
         return nn.CrossEntropyLoss()
