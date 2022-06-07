@@ -22,8 +22,10 @@ def setup_data(hparams):
     )
 
     train_transform = get_train_transforms(hparams["t"])
-
-    root = os.path.join("/", "space", "derma-data")
+    if hparams['path'] != None:
+        root = os.path.join(hparams['path'])
+    else:    
+        root = os.path.join("/", "space", "derma-data")
     dataset = datasets.ImageFolder(root, base_transforms)
 
     train_data_idx, val_data_idx = train_test_split(
