@@ -46,6 +46,7 @@ def get_train_transforms(flags=None):
 def build_transform_list(flags):
     transform_flags = flags.split(",")
     transforms_list = []
+    transform = None # If there is no matching transform should remain None
     for flag in transform_flags:
         if flag == "r":
             transform = transforms.RandomRotation(degrees=(0, 180))
@@ -54,7 +55,8 @@ def build_transform_list(flags):
         elif flag == "hflip":
             transform = transforms.RandomHorizontalFlip()
             # add new cases here
-    transforms_list.append(transform)
+        if transform is not None:
+            transforms_list.append(transform)
     return transforms_list
 
 
