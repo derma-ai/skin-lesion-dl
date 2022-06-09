@@ -97,7 +97,7 @@ def main():
     set_seed()
     train(args.gpu,
           hparams,
-          version_name=f'b={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.experiment_name}',
+          version_name=f'b={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.experiment_name}-{args.model}',
           checkpoint=args.checkpoint
           )
 
