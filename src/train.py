@@ -23,7 +23,6 @@ def set_seed(seed=15):
 
 def train(gpu,
           hparams,
-          version_name,
           checkpoint=None):
 
     train_data, val_data, weights = data_handler.setup_data(hparams)
@@ -39,23 +38,27 @@ def train(gpu,
         learning_rate=hparams["lr"],
         class_weights=weights
     )
-
     model = builder.create(checkpoint)
 
+    version_name=f'{hparams["ex"]}-{hparams["m"]}'
     logger = TensorBoardLogger(version=version_name,
-                               save_dir="./",
-                               log_graph=True
-                               )
-
+                                save_dir="./",
+                                log_graph=True
+                                )
     trainer = pl.Trainer(gpus=[gpu],
                          max_epochs=hparams["e"],
                          logger=logger
                          )
+    
+    if hparams["lr"] == 0:
+        # Run learning rate finder
+        lr_finder = trainer.tuner.lr_find(model)
+        new_lr = lr_finder.suggestion()
+        hparams["lr"] = new_lr
+        model.learning_rate = new_lr
+    logger.log_hyperparams(hparams)
 
     trainer.fit(model, train_loader, val_loader)
-
-    trainer.save_checkpoint(f'model_{version_name}.ckpt')
-
 
 def main():
     parser = ArgumentParser()
@@ -64,7 +67,7 @@ def main():
     parser.add_argument('-b', '--batch_size', type=int,
                         dest='batch_size', default=16, help="Batch size")
     parser.add_argument('-lr', '--learning_rate', type=float,
-                        dest='learning_rate', default=1e-3, help="Learning rate")
+                        dest='learning_rate', default=0, help="Learning rate")
     parser.add_argument('-wd', '--weight_decay', type=float,
                         default=1e-8, dest="weight_decay", help="Weight decay")
     parser.add_argument('-ex', '--experiment', type=str,
@@ -89,6 +92,7 @@ def main():
         "lr": args.learning_rate,
         "wd": args.weight_decay,
         "m": args.model,
+        "ex": args.experiment_name,
         "t": args.transforms,
         "l": args.loss,
         "osr": args.osr
@@ -97,7 +101,6 @@ def main():
     set_seed()
     train(args.gpu,
           hparams,
-          version_name=f'b={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.experiment_name}-{args.model}',
           checkpoint=args.checkpoint
           )
 
