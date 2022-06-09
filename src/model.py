@@ -40,7 +40,7 @@ class Classifier(pl.LightningModule):
                  num_classes=8
                  ):
         super().__init__()
-        self.hparams = hparams
+        self.hparams.update(hparams)
         self.num_classes = num_classes
         self.zero_prob = 0.5
 
