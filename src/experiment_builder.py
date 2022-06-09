@@ -58,7 +58,6 @@ class ExperimentBuilder:
         return model
 
     def get_model(self, pretrained=True):
-        print(self.hparams)
         if self.hparams["m"] == "efficientnet_b0":
             return models.efficientnet_b0(pretrained)
         if self.hparams["m"] == "efficientnet_b1":

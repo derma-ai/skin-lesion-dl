@@ -49,6 +49,7 @@ class Classifier(pl.LightningModule):
         self.loss = loss
 
         self.configure_metrics()
+        print(self.hparams)
 
     def forward(self, x):
         x = self.extractor(x)
@@ -65,9 +66,7 @@ class Classifier(pl.LightningModule):
     def training_step(self, train_batch, batch_idx):
         x, y = train_batch
         logits = self.forward(x)
-        print(logits)
         loss = self.loss(logits, y)
-        print(loss)
         self.train_acc(logits, y)
         train_acc_per_class = self.train_acc_per_class(logits,y)
         train_prec_per_class = self.train_prec_per_class(logits,y)
