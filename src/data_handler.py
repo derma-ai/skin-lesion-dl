@@ -21,7 +21,7 @@ def setup_data(hparams):
     )
 
     train_transform = get_train_transforms(hparams["t"])
-    if hparams['path'] != None:
+    if hparams.get('path') != None:
         root = os.path.join(hparams['path'])
     else:    
         root = os.path.join("/", "space", "derma-data")
