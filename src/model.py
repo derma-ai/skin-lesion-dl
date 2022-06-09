@@ -65,7 +65,9 @@ class Classifier(pl.LightningModule):
     def training_step(self, train_batch, batch_idx):
         x, y = train_batch
         logits = self.forward(x)
+        print(logits)
         loss = self.loss(logits, y)
+        print(loss)
         self.train_acc(logits, y)
         train_acc_per_class = self.train_acc_per_class(logits,y)
         train_prec_per_class = self.train_prec_per_class(logits,y)
@@ -110,7 +112,6 @@ class Classifier(pl.LightningModule):
         return y, preds
 
     def validation_epoch_end(self, validation_step_outputs):
-        
         self.add_histogram()
         pred_step_tensors = []
         target__step_tensors = []
