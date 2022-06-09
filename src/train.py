@@ -86,6 +86,7 @@ def main():
                         dest="gpu", help="On which GPU to train")
     args = parser.parse_args()
 
+    print(f"Using {args.model} model")
     hparams = {
         "e": args.max_epochs,
         "b": args.batch_size,
