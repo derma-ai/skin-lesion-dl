@@ -48,7 +48,7 @@ def train(gpu,
                          logger=logger
                          )
     
-    if hparams["lr"] == 0:
+    if hparams["lrf"]:
         # Run learning rate finder
         lr_finder = trainer.tuner.lr_find(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
         new_lr = lr_finder.suggestion()
@@ -67,7 +67,9 @@ def main():
     parser.add_argument('-b', '--batch_size', type=int,
                         dest='batch_size', default=16, help="Batch size")
     parser.add_argument('-lr', '--learning_rate', type=float,
-                        dest='learning_rate', default=0, help="Learning rate")
+                        dest='learning_rate', default=1e-3, help="Learning rate")
+    parser.add_argument('-lrf', '--learning_rate_finder', type=bool,
+                        dest='learning_rate_finder', default=True, help="Learning rate finder enabled")
     parser.add_argument('-wd', '--weight_decay', type=float,
                         default=1e-8, dest="weight_decay", help="Weight decay")
     parser.add_argument('-ex', '--experiment', type=str,
@@ -96,7 +98,8 @@ def main():
         "ex": args.experiment_name,
         "t": args.transforms,
         "l": args.loss,
-        "osr": args.osr
+        "osr": args.osr,
+        "lrf": args.learning_rate_finder
     }
 
     set_seed()
