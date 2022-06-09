@@ -49,7 +49,6 @@ class Classifier(pl.LightningModule):
         self.loss = loss
 
         self.configure_metrics()
-        print(self.hparams)
 
     def forward(self, x):
         x = self.extractor(x)
@@ -58,7 +57,6 @@ class Classifier(pl.LightningModule):
         return x
 
     def configure_optimizers(self):
-        print(f"Configured LR:", self.hparams["lr"])
         optimizer = torch.optim.Adam(self.extractor.parameters(),
                                      lr=self.hparams["lr"],
                                      weight_decay=self.hparams["wd"])
@@ -133,10 +131,6 @@ class Classifier(pl.LightningModule):
         confusion_matrix_np = confusion_matrix.cpu().data.numpy()
         heat_map = sns.heatmap(confusion_matrix_np, annot=True)
         self.logger.experiment.add_figure("conf matrix", heat_map.get_figure(), global_step=self.current_epoch)
-
-    def on_train_epoch_start(self):
-        if self.current_epoch == 8:
-            self.extractor.requires_grad_(True)
 
     def log_per_class(self, mode, metric, values):
         for i in range(len(values)):

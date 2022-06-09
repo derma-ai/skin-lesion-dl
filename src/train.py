@@ -9,7 +9,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from experiment_builder import ExperimentBuilder
 import data_handler
 
-
 def set_seed(seed=15):
     import random
     random.seed(seed)
@@ -19,7 +18,6 @@ def set_seed(seed=15):
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
-
 
 def train(gpu,
           hparams,
@@ -48,21 +46,22 @@ def train(gpu,
                          logger=logger
                          )
     
+
     if hparams["lrf"] == 1:
-        # Run learning rate finder
+         # Run learning rate finder
         lr_finder = trainer.tuner.lr_find(model, train_dataloaders=train_loader, val_dataloaders=val_loader, early_stop_threshold=3.0, max_lr=1e-4)
         new_lr = lr_finder.suggestion()
         hparams["lr"] = new_lr
         print(f"Found LR: {new_lr}")
     
-    builder = ExperimentBuilder(
-        hparams,
-        num_classes=num_classes,
-        class_weights=weights
-    )
-    model = builder.create(checkpoint)
-    logger.log_hyperparams(hparams)
+        builder = ExperimentBuilder(
+            hparams,
+            num_classes=num_classes,
+            class_weights=weights
+        )
+        model = builder.create(checkpoint)
 
+    logger.log_hyperparams(hparams)
     trainer.fit(model, train_loader, val_loader)
 
 def main():
@@ -74,7 +73,7 @@ def main():
     parser.add_argument('-lr', '--learning_rate', type=float,
                         dest='learning_rate', default=1e-3, help="Learning rate")
     parser.add_argument('-lrf', '--learning_rate_finder', type=int,
-                        dest='learning_rate_finder', default=1, help="Learning rate finder enabled")
+                        dest='learning_rate_finder', default=0, help="Learning rate finder enabled")
     parser.add_argument('-wd', '--weight_decay', type=float,
                         default=1e-8, dest="weight_decay", help="Weight decay")
     parser.add_argument('-ex', '--experiment', type=str,
