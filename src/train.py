@@ -43,7 +43,7 @@ def train(gpu,
                                 )
 
     checkpoint_callback = pl.callbacks.ModelCheckpoint(dirpath='./checkpoints',
-                                                       filename=f'{version_name}'+'-{epoch}' + f'-bs:{hparams["bs"]}' + '{val_acc:.2f}',
+                                                       filename=f'{version_name}'+'-{epoch}' + f'-bs:{hparams["b"]}' + '{val_acc:.2f}',
                                                        save_top_k=3,
                                                        every_n_epochs=5,
                                                        save_on_train_epoch_end=True,
