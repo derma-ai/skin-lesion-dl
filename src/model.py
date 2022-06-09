@@ -58,6 +58,7 @@ class Classifier(pl.LightningModule):
         return x
 
     def configure_optimizers(self):
+        print(f"Configured LR:", self.hparams["lr"])
         optimizer = torch.optim.Adam(self.extractor.parameters(),
                                      lr=self.hparams["lr"],
                                      weight_decay=self.hparams["wd"])
