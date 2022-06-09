@@ -16,15 +16,16 @@ def setup_data(hparams):
 
     base_transforms = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((224, 224)),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.Resize((224, 224))
     ]
     )
 
     train_transform = get_train_transforms(hparams["t"])
+    if hparams['path'] != None:
+        root = os.path.join(hparams['path'])
+    else:    
+        root = os.path.join("/", "space", "derma-data")
     print(f"Trainig transforms: {train_transform}")
-
-    root = os.path.join("/", "space", "derma-data")
     dataset = datasets.ImageFolder(root, base_transforms)
 
     train_data_idx, val_data_idx = train_test_split(
@@ -44,6 +45,7 @@ def get_train_transforms(flags=None):
 def build_transform_list(flags):
     transform_flags = flags.split(",")
     transforms_list = []
+    transform = None # If there is no matching transform should remain None
     for flag in transform_flags:
         if flag == "r":
             transform = transforms.RandomRotation(degrees=(0, 180))
@@ -52,7 +54,8 @@ def build_transform_list(flags):
         elif flag == "hflip":
             transform = transforms.RandomHorizontalFlip()
             # add new cases here
-    transforms_list.append(transform)
+        if transform is not None:
+            transforms_list.append(transform)
     return transforms_list
 
 

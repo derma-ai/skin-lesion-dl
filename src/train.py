@@ -21,7 +21,8 @@ def set_seed(seed=15):
     torch.backends.cudnn.deterministic = True
 
 
-def train(hparams,
+def train(gpu,
+          hparams,
           version_name,
           checkpoint=None):
 
@@ -46,7 +47,7 @@ def train(hparams,
                                log_graph=True
                                )
 
-    trainer = pl.Trainer(gpus=[1],
+    trainer = pl.Trainer(gpus=[gpu],
                          max_epochs=hparams["e"],
                          logger=logger
                          )
@@ -78,6 +79,8 @@ def main():
                         help="Loss function'")
     parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
                         dest="checkpoint", help="Call model from checkpoint by version name")
+    parser.add_argument('-gpu', '--gpu', type=int, default=None,
+                        dest="gpu", help="On which GPU to train")
     args = parser.parse_args()
 
     hparams = {
@@ -92,9 +95,11 @@ def main():
     }
 
     set_seed()
-    train(hparams,
+    train(args.gpu,
+          hparams,
           version_name=f'b={args.batch_size}-lr={args.learning_rate}-wd={args.weight_decay}-{args.experiment_name}',
-          checkpoint=args.checkpoint)
+          checkpoint=args.checkpoint
+          )
 
 
 if __name__ == "__main__":
