@@ -50,7 +50,7 @@ def train(gpu,
     
     if hparams["lr"] == 0:
         # Run learning rate finder
-        lr_finder = trainer.tuner.lr_find(model)
+        lr_finder = trainer.tuner.lr_find(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
         new_lr = lr_finder.suggestion()
         hparams["lr"] = new_lr
         model.hparams["lr"] = new_lr
