@@ -33,18 +33,15 @@ class Classifier(pl.LightningModule):
     """
 
     def __init__(self,
+                 hparams,
                  extractor,
                  classifier,
                  loss,
-                 num_classes=8,
-                 learning_rate=1e-3,
-                 weight_decay=1e-8,
+                 num_classes=8
                  ):
         super().__init__()
-
+        self.hparams = hparams
         self.num_classes = num_classes
-        self.learning_rate = learning_rate
-        self.weight_decay = weight_decay
         self.zero_prob = 0.5
 
         self.extractor = extractor
@@ -61,8 +58,8 @@ class Classifier(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.extractor.parameters(),
-                                     lr=self.learning_rate,
-                                     weight_decay=self.weight_decay)
+                                     lr=self.hparams["lr"],
+                                     weight_decay=self.hparams["wd"])
         return optimizer
 
     def training_step(self, train_batch, batch_idx):

@@ -11,18 +11,12 @@ from model import Classifier
 class ExperimentBuilder:
 
     def __init__(self,
-                 extractor_type,
-                 loss,
+                 hparams,
                  num_classes=8,
-                 learning_rate=1e-3,
-                 weight_decay=1e-8,
                  class_weights=None
                  ):
-        self.extractor_type = extractor_type
-        self.loss_name = loss
+        self.hparams = hparams
         self.num_classes = num_classes
-        self.learning_rate = learning_rate
-        self.weight_decay = weight_decay
         self.class_weights = class_weights
 
         layers = list(self.get_model().children())
@@ -35,12 +29,11 @@ class ExperimentBuilder:
     def create(self, checkpoint):
         if(checkpoint is None):
             model = Classifier(
+                hparams=self.hparams,
                 extractor=self.extractor,
                 classifier=self.classifier,
                 loss=self.loss,
-                num_classes=self.num_classes,
-                learning_rate=self.learning_rate,
-                weight_decay=self.weight_decay,
+                num_classes=self.num_classes
             )
         else:
             model = self.load_checkpoint(checkpoint)
@@ -54,6 +47,7 @@ class ExperimentBuilder:
             ckpt = max(
                 glob.glob(f"./checkpoints/*{checkpoint}.ckpt"), key=os.path.getctime)
         model = Classifier.load_from_checkpoint(ckpt,
+                                                hparams=self.hparams,
                                                 extractor=self.extractor,
                                                 classifier=self.classifier,
                                                 loss=self.loss,
@@ -64,40 +58,41 @@ class ExperimentBuilder:
         return model
 
     def get_model(self, pretrained=True):
-        if self.extractor_type == "efficientnet_b0":
+        if self.hparams["m"] == "efficientnet_b0":
             return models.efficientnet_b0(pretrained)
-        if self.extractor_type == "efficientnet_b1":
+        if self.hparams["m"] == "efficientnet_b1":
             return models.efficientnet_b1(pretrained)
-        if self.extractor_type == "efficientnet_b2":
+        if self.hparams["m"] == "efficientnet_b2":
             return models.efficientnet_b2(pretrained)
-        if self.extractor_type == "efficientnet_b3":
+        if self.hparams["m"] == "efficientnet_b3":
             return models.efficientnet_b3(pretrained)
-        if self.extractor_type == "efficientnet_b4":
+        if self.hparams["m"] == "efficientnet_b4":
             return models.efficientnet_b4(pretrained)
-        if self.extractor_type == "efficientnet_b5":
+        if self.hparams["m"] == "efficientnet_b5":
             return models.efficientnet_b5(pretrained)
-        if self.extractor_type == "efficientnet_b6":
+        if self.hparams["m"] == "efficientnet_b6":
             return models.efficientnet_b6(pretrained)
-        if self.extractor_type == "efficientnet_b7":
+        if self.hparams["m"] == "efficientnet_b7":
             return models.efficientnet_b7(pretrained)
-        if self.extractor_type == "resnet50":
+        if self.hparams["m"] == "resnet50":
             return models.resnet50(pretrained)
-        if self.extractor_type == "resnet101":
+        if self.hparams["m"] == "resnet101":
             return models.resnet101(pretrained)
-        if self.extractor_type == "densenet121":
+        if self.hparams["m"] == "densenet121":
             return models.densenet121(pretrained)
-        if self.extractor_type == "resnext50_32x4d":
+        if self.hparams["m"] == "resnext50_32x4d":
             return models.resnext50_32x4d(pretrained)
-        if self.extractor_type == "resnext101_32x8d":
+        if self.hparams["m"] == "resnext101_32x8d":
             return models.resnext101_32x8d(pretrained)
         print("No model with that name, defaulting to efficientnet_b0")
         return models.efficientnet_b0(pretrained)
 
     def configure_loss(self):
-        if self.loss_name == "wce":
+        loss_name = self.hparams["l"]
+        if loss_name == "wce":
             print("Using weighted ce loss")
             return nn.CrossEntropyLoss(weight=self.class_weights)
-        if self.loss_name == "ce":
+        if loss_name == "ce":
             print("Using standard ce loss")
             return nn.CrossEntropyLoss()
         print("No loss with that name, defaulting to CE Loss")

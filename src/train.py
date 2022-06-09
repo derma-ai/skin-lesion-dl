@@ -27,15 +27,13 @@ def train(gpu,
 
     train_data, val_data, weights = data_handler.setup_data(hparams)
 
-    hparams["c"] = len(train_data.classes)
+    num_classes = len(train_data.classes)
     train_loader, val_loader = data_handler.setup_data_loaders(
         train_data, val_data, hparams["b"], hparams["osr"])
 
     builder = ExperimentBuilder(
-        extractor_type=hparams["m"],
-        loss=hparams["l"],
-        num_classes=hparams["c"],
-        learning_rate=hparams["lr"],
+        hparams,
+        num_classes=num_classes,
         class_weights=weights
     )
     model = builder.create(checkpoint)
@@ -55,7 +53,7 @@ def train(gpu,
         lr_finder = trainer.tuner.lr_find(model)
         new_lr = lr_finder.suggestion()
         hparams["lr"] = new_lr
-        model.learning_rate = new_lr
+        model.hparams["lr"] = new_lr
     logger.log_hyperparams(hparams)
 
     trainer.fit(model, train_loader, val_loader)
