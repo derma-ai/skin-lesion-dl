@@ -55,6 +55,7 @@ def train(gpu,
         hparams["lr"] = new_lr
         model.hparams["lr"] = new_lr
         print(f"Found LR: {new_lr}")
+        print(model.hparams)
     logger.log_hyperparams(hparams)
 
     trainer.fit(model, train_loader, val_loader)
