@@ -1,3 +1,5 @@
 lightning_logs
 checkpoints
 *.ckpt
+src/__pycache__
+nohup*
