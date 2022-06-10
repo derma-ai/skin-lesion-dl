@@ -36,7 +36,7 @@ def train(gpu,
     )
     model = builder.create(checkpoint)
 
-    version_name=f'{hparams["ex"]}-{hparams["m"]}'
+    version_name=f'{hparams["ex"]}-{hparams["m"]}-bs:{hparams["b"]}'
     logger = TensorBoardLogger(version=version_name,
                                 save_dir="./",
                                 log_graph=True
