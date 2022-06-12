@@ -1,9 +1,11 @@
 from argparse import ArgumentParser
 import os
+from importlib_metadata import metadata
 
 import pytorch_lightning as pl
 import numpy as np
 import torch
+import matplotlib as plt
 from pytorch_lightning.loggers import TensorBoardLogger
 
 from experiment_builder import ExperimentBuilder
@@ -18,6 +20,19 @@ def set_seed(seed=15):
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
+
+def add_visualization_on_tensorboard(logger, train_data):
+    classes = ['AK','BCC','BKL','DF','MEL','NV','SCC','VASC']
+    images, labels = train_data
+    perm = torch.randperm(len(train_data))
+    image_set = images[perm][:100] 
+    label_set = labels[perm][:100]
+    class_labels = [classes[label] for label in label_set]
+    features = image_set.view(-1,224*224)
+    # add a projector to visualize
+    logger.experiment.add_embedding(features, metadata=class_labels, label_img = image_set.unsqueeze(1))
+    
+
 
 def train(gpu,
           hparams,
@@ -41,6 +56,9 @@ def train(gpu,
                                 save_dir="./",
                                 log_graph=True
                                 )
+    # visualize metrics on tensorboard
+    add_visualization_on_tensorboard(logger, train_data)
+
 
     checkpoint_callback = pl.callbacks.ModelCheckpoint(dirpath='./checkpoints',
                                                        filename=f'{version_name}'+'-{epoch}' + f'-bs:{hparams["b"]}' + '{val_acc:.2f}',
