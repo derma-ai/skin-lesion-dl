@@ -22,16 +22,19 @@ def set_seed(seed=15):
     torch.backends.cudnn.deterministic = True
 
 def add_visualization_on_tensorboard(logger, train_data):
-    classes = ['AK','BCC','BKL','DF','MEL','NV','SCC','VASC']
-    images, labels = train_data
     perm = torch.randperm(len(train_data))
-    image_set = images[perm][:100] 
-    label_set = labels[perm][:100]
-    class_labels = [classes[label] for label in label_set]
-    features = image_set.view(-1,224*224)
+    images = []
+    labels = []
+    for idx in perm:
+        image,label = train_data[idx]
+        images.append(image)
+        labels.append(label)
+    class_labels = [train_data.classes[label] for label in labels]
+    images = torch.stack(images)
+    features = images.view(-1,224*224)
     # add a projector to visualize
-    logger.experiment.add_embedding(features, metadata=class_labels, label_img = image_set.unsqueeze(1))
-    
+    logger.experiment.add_embedding(features, metadata=class_labels, label_img = images.unsqueeze(1))
+
 
 
 def train(gpu,
