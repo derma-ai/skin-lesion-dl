@@ -35,7 +35,7 @@ def add_visualization_on_tensorboard(logger, train_data):
     print("After for-loop")
     class_labels = [train_data.classes[label] for label in labels]
     images = torch.stack(images)
-    features = images.view(-1,224*224)
+    features = images.view(-1,3*224*224)
     print("mat shape:", features.shape, "label_img shape:", images.unsqueeze(1).shape)
     # add a projector to visualize
     logger.experiment.add_embedding(features, metadata=class_labels, label_img = images.unsqueeze(1))
