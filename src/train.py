@@ -25,10 +25,12 @@ def add_visualization_on_tensorboard(logger, train_data):
     perm = torch.randperm(len(train_data))
     images = []
     labels = []
+    print("First stop")
     for idx in perm:
         image,label = train_data[idx]
         images.append(image)
         labels.append(label)
+    print("After for-loop")
     class_labels = [train_data.classes[label] for label in labels]
     images = torch.stack(images)
     features = images.view(-1,224*224)
