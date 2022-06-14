@@ -27,7 +27,7 @@ def add_visualization_on_tensorboard(logger, train_data):
     labels = []
     print("First stop")
     for idx in perm:
-        print(idx)
+        print(len(perm))
         image,label = train_data[idx]
         print(image.shape, label)
         images.append(image)
