@@ -3,3 +3,4 @@ checkpoints
 *.ckpt
 src/__pycache__
 nohup*
+.vscode
