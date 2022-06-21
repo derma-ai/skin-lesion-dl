@@ -15,8 +15,7 @@ def setup_data(hparams):
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     base_transforms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Resize((224, 224))
+        transforms.ToTensor()   
     ]
     )
 
@@ -56,17 +55,22 @@ def build_transform_list(flags):
             # add new cases here
         if transform is not None:
             transforms_list.append(transform)
+    transforms_list.append(transforms.Resize((224, 224)))
     return transforms_list
 
 
-def compute_weights(dataset):
+def compute_weights(dataset, relatively_weighted):
     class_sample_count = np.unique(dataset.targets, return_counts=True)[1]
     weights = 1.0 / class_sample_count
+    if(relatively_weighted):
+        top_k_weights = np.sort(weights.numpy())[-3 :]
+        average_weight = np.average(top_k_weights)
+        weights = weights + average_weight
     weights_per_sample = np.array([weights[t] for t in dataset.targets])
     return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()
 
 
-def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate):
+def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate, relatively_weighted):
     if (over_sampling_rate <= 1):
         train_loader = torch.utils.data.DataLoader(train_data,
                                                 batch_size=batch_size,
@@ -76,7 +80,7 @@ def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate):
                                                 pin_memory=True)
     else:
         print("Use oversampling and weighted sampler")
-        _, weights_per_sample = compute_weights(train_data.dataset)
+        _, weights_per_sample = compute_weights(train_data.dataset,relatively_weighted)
         weights_per_sample = weights_per_sample[train_data.indices]
         weighted_sampler = WeightedRandomSampler(
             weights=weights_per_sample, num_samples=int(len(train_data) * over_sampling_rate))
