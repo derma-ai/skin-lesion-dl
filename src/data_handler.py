@@ -31,7 +31,7 @@ def setup_data(hparams):
         list(range(len(dataset))), test_size=0.2, stratify=dataset.targets)
     weights, _ = compute_weights(dataset)
     train_data = Subset(dataset, train_data_idx, train_transform)
-    val_data = Subset(dataset, val_data_idx)
+    val_data = Subset(dataset, val_data_idx, transforms.Resize(224,224))
     return train_data, val_data, weights
 
 
@@ -59,12 +59,11 @@ def build_transform_list(flags):
     return transforms_list
 
 
-def compute_weights(dataset, relatively_weighted):
+def compute_weights(dataset, relatively_weighted=True):
     class_sample_count = np.unique(dataset.targets, return_counts=True)[1]
     weights = 1.0 / class_sample_count
     if(relatively_weighted):
-        top_k_weights = np.sort(weights.numpy())[-3 :]
-        average_weight = np.average(top_k_weights)
+        average_weight = np.average(weights)
         weights = weights + average_weight
     weights_per_sample = np.array([weights[t] for t in dataset.targets])
     return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()

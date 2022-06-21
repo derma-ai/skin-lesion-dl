@@ -26,17 +26,13 @@ def add_visualization_on_tensorboard(logger, train_data):
     perm = perm[:100]
     images = []
     labels = []
-    print("First stop")
     for idx in perm:
-        print(len(perm))
         image,label = train_data[idx]
         images.append(image)
         labels.append(label)
-    print("After for-loop")
     class_labels = [train_data.classes[label] for label in labels]
     images = torch.stack(images)
     features = images.view(-1,3*224*224)
-    print("mat shape:", features.shape, "label_img shape:", images.shape)
     # add a projector to visualize
     logger.experiment.add_embedding(features, metadata=class_labels, label_img = images)
 
@@ -59,7 +55,7 @@ def train(gpu,
     )
     model = builder.create(checkpoint)
 
-    version_name=f'{hparams["ex"]}-{hparams["m"]}-bs:{hparams["b"]}'
+    version_name=f'{hparams["ex"]}-{hparams["m"]}-bs={hparams["b"]}'
     logger = TensorBoardLogger(version=version_name,
                                 save_dir="./",
                                 log_graph=True
@@ -69,7 +65,7 @@ def train(gpu,
 
 
     checkpoint_callback = pl.callbacks.ModelCheckpoint(dirpath='./checkpoints',
-                                                       filename=f'{version_name}'+'-{epoch}' + f'-bs:{hparams["b"]}' + '{val_acc:.2f}',
+                                                       filename=f'{version_name}'+'-{epoch}' + f'-bs={hparams["b"]}' + '{val_acc:.2f}',
                                                        save_top_k=3,
                                                        every_n_epochs=5,
                                                        save_on_train_epoch_end=True,
