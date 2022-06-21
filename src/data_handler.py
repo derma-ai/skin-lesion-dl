@@ -70,7 +70,7 @@ def compute_weights(dataset, relatively_weighted):
     return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()
 
 
-def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate, relatively_weighted):
+def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate, relatively_weighted=True):
     if (over_sampling_rate <= 1):
         train_loader = torch.utils.data.DataLoader(train_data,
                                                 batch_size=batch_size,
