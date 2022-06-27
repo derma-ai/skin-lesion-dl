@@ -23,15 +23,15 @@ def setup_data(hparams):
     if hparams.get('path') != None:
         root = os.path.join(hparams['path'])
     else:    
-        root = os.path.join("/", "space", "derma-data")
+        root = os.path.join("/", "space", "derma-data", "isic2019", "clean")
     print(f"Trainig transforms: {train_transform}")
     dataset = datasets.ImageFolder(root, base_transforms)
 
     train_data_idx, val_data_idx = train_test_split(
         list(range(len(dataset))), test_size=0.2, stratify=dataset.targets)
-    weights, _ = compute_weights(dataset)
+    weights, _ = compute_weights(dataset, hparams.get("rw"))
     train_data = Subset(dataset, train_data_idx, train_transform)
-    val_data = Subset(dataset, val_data_idx, transforms.Resize(224,224))
+    val_data = Subset(dataset, val_data_idx, transforms.Resize((224,224)))
     return train_data, val_data, weights
 
 
@@ -59,7 +59,7 @@ def build_transform_list(flags):
     return transforms_list
 
 
-def compute_weights(dataset, relatively_weighted=True):
+def compute_weights(dataset, relatively_weighted=False):
     class_sample_count = np.unique(dataset.targets, return_counts=True)[1]
     weights = 1.0 / class_sample_count
     if(relatively_weighted):
@@ -69,7 +69,7 @@ def compute_weights(dataset, relatively_weighted=True):
     return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()
 
 
-def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate, relatively_weighted=True):
+def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate, relatively_weighted):
     if (over_sampling_rate <= 1):
         train_loader = torch.utils.data.DataLoader(train_data,
                                                 batch_size=batch_size,
@@ -79,7 +79,7 @@ def setup_data_loaders(train_data, val_data, batch_size, over_sampling_rate, rel
                                                 pin_memory=True)
     else:
         print("Use oversampling and weighted sampler")
-        _, weights_per_sample = compute_weights(train_data.dataset,relatively_weighted)
+        _, weights_per_sample = compute_weights(train_data.dataset, relatively_weighted)
         weights_per_sample = weights_per_sample[train_data.indices]
         weighted_sampler = WeightedRandomSampler(
             weights=weights_per_sample, num_samples=int(len(train_data) * over_sampling_rate))
