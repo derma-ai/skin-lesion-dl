@@ -23,7 +23,7 @@ def setup_data(hparams):
     if hparams.get('path') != None:
         root = os.path.join(hparams['path'])
     else:    
-        root = os.path.join("/", "space", "derma-data", "isic2019", "clean")
+        root = os.path.join("/", "space", "derma-data", "isic_2019", "clean")
     print(f"Trainig transforms: {train_transform}")
     dataset = datasets.ImageFolder(root, base_transforms)
 
