@@ -46,7 +46,7 @@ def train(gpu,
 
     num_classes = len(train_data.classes)
     train_loader, val_loader = data_handler.setup_data_loaders(
-        train_data, val_data, hparams["b"], hparams["osr"])
+        train_data, val_data, hparams["b"], hparams["osr"], hparams["rw"])
 
     builder = ExperimentBuilder(
         hparams,
@@ -108,6 +108,8 @@ def main():
                         dest='learning_rate_finder', default=0, help="Learning rate finder enabled")
     parser.add_argument('-wd', '--weight_decay', type=float,
                         default=1e-8, dest="weight_decay", help="Weight decay")
+    parser.add_argument('-rw', '--relatively_weighted', type=bool,
+                        default=False, dest="relatively_weighted", help="Should weights be relatively weighted")
     parser.add_argument('-ex', '--experiment', type=str,
                         default="", dest="experiment_name", help="Experiment name")
     parser.add_argument('-m', '--model', type=str,
@@ -130,6 +132,7 @@ def main():
         "b": args.batch_size,
         "lr": args.learning_rate,
         "wd": args.weight_decay,
+        "rw": args.relatively_weighted,
         "m": args.model,
         "ex": args.experiment_name,
         "t": args.transforms,
