@@ -132,7 +132,7 @@ def main():
         "b": args.batch_size,
         "lr": args.learning_rate,
         "wd": args.weight_decay,
-        "rw": args.relatively_weighted,
+        "rw": args.weight_scheme,
         "m": args.model,
         "ex": args.experiment_name,
         "t": args.transforms,
