@@ -51,7 +51,7 @@ def create_dataset_dir(path, dataset):
     for image, label in dataset:
         img = transforms.ToPILImage()
         img_class = classes[label]
-        img.save()
+        img.save(os.path.join(classes_dict[img_class],""),)
     return
 
 def main():
