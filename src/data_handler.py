@@ -29,7 +29,8 @@ def setup_data(hparams):
 
     train_data_idx, val_data_idx = train_test_split(
         list(range(len(dataset))), test_size=0.2, stratify=dataset.targets)
-    weights, _ = compute_weights(dataset, hparams.get("ws"))
+    # weight_scheme == 1 to use 1/n for WCE Loss 
+    weights, _ = compute_weights(dataset, 1)
     train_data = Subset(dataset, train_data_idx, train_transform)
     val_data = Subset(dataset, val_data_idx, transforms.Resize((224,224)))
     return train_data, val_data, weights
@@ -62,13 +63,15 @@ def build_transform_list(flags):
 def compute_weights(dataset, weight_scheme = 0):
     class_sample_count = np.unique(dataset.targets, return_counts=True)[1]
     weights = 1.0 / class_sample_count
+    # no weight scheme used
     if(weight_scheme == 0):
         return None, None
+    elif(weight_scheme == 2):
+        weights_avg = np.average(weights)
+        weights = weights + weights_avg
+        # Medically especially important classes BCC:1, MEL:4, NV:5 and SCC:6 recieve higher weights
     elif(weight_scheme == 3):
         weights = np.array([1,4,1,1,4,2,4,1])
-    elif(weight_scheme == 2):
-        weights_avg = np.avg(weights)
-        weights = weights + weights_avg
     weights_per_sample = np.array([weights[t] for t in dataset.targets])
     return torch.from_numpy(weights).float(), torch.from_numpy(weights_per_sample).float()
 
