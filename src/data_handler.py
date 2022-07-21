@@ -53,7 +53,7 @@ def build_transform_list(flags):
             transform = transforms.RandomVerticalFlip()
         elif flag == "hflip":
             transform = transforms.RandomHorizontalFlip()
-        elif flag == "gaussblus":
+        elif flag == "gaussblur":
             transform = transforms.GaussianBlur()
             # add new cases here
         if transform is not None:
