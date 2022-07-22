@@ -55,6 +55,18 @@ def build_transform_list(flags):
             transform = transforms.RandomHorizontalFlip()
         elif flag == "gaussblur":
             transform = transforms.GaussianBlur()
+        elif flag == "colorjitter":
+            transform = transforms.ColorJitter()
+        elif flag == "grayscale":
+            transform = transforms.Grayscale()
+        elif flag == "randperspective":
+            transform = transforms.RandomPerspective()
+        elif flag == "randposterize":
+            transform = transforms.RandomPosterize()
+        elif flag == "randadjustsharpness":
+            transform = transforms.RandomAdjustSharpness()
+        elif flag == "randomequalize":
+            transform = transforms.RandomEqualize()
             # add new cases here
         if transform is not None:
             transforms_list.append(transform)

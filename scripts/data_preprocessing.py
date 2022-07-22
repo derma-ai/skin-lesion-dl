@@ -1,5 +1,5 @@
+from cgitb import grey
 import os
-import ntpath
 import torch
 import numpy as np
 import torchvision as tv
@@ -18,13 +18,15 @@ classes_dict = {}
 file_names_per_class = {}
 
 def preprocess_images(batch):
+    print(type(batch), len(batch))
     edge = 0.01
     changed_images = []
-    for k in range(len(batch.size[0])):
+    for k in range(len(batch[0])):
         image = batch[k][0]
         label = batch[k][1]
         grey_img = (torch.sum(image, dim=0) / 3).numpy()
-        has_black_edges = ((np.average(grey_img[0][:]) < edge) and (np.average(grey_img[-1][:]) < edge) and (np.average(grey_img[:][0]) < edge) and (np.average(grey_img[:][-1]) < edge))
+        print("Shape of grey image:", grey_img.shape)
+        has_black_edges = ((np.average(grey_img[0,:]) < edge) and (np.average(grey_img[-1,:]) < edge) and (np.average(grey_img[:,0]) < edge) and (np.average(grey_img[:,-1]) < edge))
         if(has_black_edges):
             blwh_img = (1.0 * (grey_img >= 0.12))
             cov_m = np.cov(blwh_img)

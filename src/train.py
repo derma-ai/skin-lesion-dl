@@ -115,7 +115,7 @@ def main():
     parser.add_argument('-m', '--model', type=str,
                         default="", dest="model", help="Model name")
     parser.add_argument("-t", "--transforms", type=str, default=None, dest="transforms",
-                        help="Comma separated list of transform flags, e.g. /'r,hflip,vflip/'")
+                        help="Comma separated list of transform flags, e.g. /'r,hflip,vflip,gaussblur/'")
     parser.add_argument("-osr", "--over_sampling_rate", type=float, default=1, dest="osr",
                         help="How many multiples of dataset size should be oversampled using a weighted sampler. At 1, no oversampling or weighted sampling is done.")
     parser.add_argument("-l", "--loss", type=str, default="", dest="loss",
