@@ -58,15 +58,15 @@ def build_transform_list(flags):
         elif flag == "colorjitter":
             transform = transforms.ColorJitter()
         elif flag == "grayscale":
-            transform = transforms.Grayscale()
+            transform = transforms.Grayscale(num_output_channels=3)
         elif flag == "randperspective":
             transform = transforms.RandomPerspective()
         elif flag == "randposterize":
-            transform = transforms.RandomPosterize()
+            transform = transforms.Compose([transforms.ToPILImage(mode="RGB"),transforms.RandomPosterize(bits=5),transforms.ToTensor()])
         elif flag == "randadjustsharpness":
-            transform = transforms.RandomAdjustSharpness()
-        elif flag == "randomequalize":
-            transform = transforms.RandomEqualize()
+            transform = transforms.RandomAdjustSharpness(np.randint(5))
+        elif flag == "randomequalize": # currently not working because of TypeError: expects [0,255] but got [0,1] due to ToTensor
+            transform = transforms.Compose([transforms.ToPILImage(mode="RGB"),transforms.RandomEqualize(),transforms.ToTensor()])
             # add new cases here
         if transform is not None:
             transforms_list.append(transform)
