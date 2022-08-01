@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 from subset import Subset
 
-def setup_data(hparams):
+def setup_data(hparams, path=None):
     # This somehow makes the performance terrible.
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
@@ -33,7 +33,7 @@ def setup_data(hparams):
     weights, _ = compute_weights(dataset, 1)
     train_data = Subset(dataset, train_data_idx, train_transform)
     val_data = Subset(dataset, val_data_idx, transforms.Resize((224,224)))
-    return train_data, val_data, weights
+    return train_data, val_data, weights, dataset
 
 
 def get_train_transforms(flags=None):
