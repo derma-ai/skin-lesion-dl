@@ -51,6 +51,12 @@ class Classifier(pl.LightningModule):
         self.configure_metrics()
 
     def forward(self, x):
+        if(type(x) == type([])):
+            x,y = x
+            x = self.extractor(x)
+            x = torch.squeeze(x)
+            x = self.classifier(x)
+            return x, y
         x = self.extractor(x)
         x = torch.squeeze(x)
         x = self.classifier(x)
