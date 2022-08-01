@@ -26,7 +26,7 @@ class ExperimentBuilder:
             layers[-1][1].in_features, self.num_classes)
         self.loss = self.configure_loss()
 
-    def create(self, checkpoint):
+    def create(self, checkpoint=None):
         if(checkpoint is None):
             model = Classifier(
                 hparams=self.hparams,
