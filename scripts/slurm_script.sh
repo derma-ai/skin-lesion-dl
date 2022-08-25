@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-#SBATCH --job-name=clcif-0
+#SBATCH --job-name=weighted_focal
 #SBATCH --output=res.txt
 #SBATCH --error=res.err
 
@@ -11,4 +11,4 @@
 CUDA_VISIBLE_DEVICES=0
 
 source activate idp_env
-srun ./run.sh
+srun ./train.sh efficientnet_b0 64 224
