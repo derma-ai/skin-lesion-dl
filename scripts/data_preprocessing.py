@@ -5,81 +5,78 @@ import numpy as np
 import torchvision as tv
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-from PIL import Image
 
 
 """
-Preprocess images to eliminate black edged images
+Preprocess image to eliminate possible black edges around the image.
 
-
+  Keyword arguments:
+  sample  -- (torch.Tensor, int) - tuple of a labelled image dataset
 """
 classes = ["AK", "BCC", "BKL", "DF", "MEL", "NV", "SCC", "VASC"]
 classes_dict = {}
 file_names_per_class = {}
-
-def preprocess_images(batch):
-    print(type(batch), len(batch))
+def preprocess_image(sample):
     edge = 0.01
-    changed_images = []
-    for k in range(len(batch[0])):
-        image = batch[k][0]
-        label = batch[k][1]
-        grey_img = (torch.sum(image, dim=0) / 3).numpy()
-        print("Shape of grey image:", grey_img.shape)
-        has_black_edges = ((np.average(grey_img[0,:]) < edge) and (np.average(grey_img[-1,:]) < edge) and (np.average(grey_img[:,0]) < edge) and (np.average(grey_img[:,-1]) < edge))
-        if(has_black_edges):
-            blwh_img = (1.0 * (grey_img >= 0.12))
-            cov_m = np.cov(blwh_img)
-            box_idx = np.argwhere((cov_m) > 0.001)
-            outer_points = np.argmax(box_idx, axis=0)
-            height= np.abs(box_idx[outer_points[0],0] - box_idx[outer_points[0],1])
-            width = np.abs(box_idx[outer_points[1],0] - box_idx[outer_points[1],1])
-            changed_images.append((tv.transforms.functional.resized_crop(image, top=box_idx[0,0], left=box_idx[0,1],height= height, width= width, size=224), dataset[k][1]))
-        else:
-            changed_images.append((image, label))
-    return changed_images
+    image, label = sample
+    grey_img = (torch.sum(image, dim=0) / 3).numpy()
+    has_black_edges = ((np.average(grey_img[0,:]) < edge) and (np.average(grey_img[-1,:]) < edge) and (np.average(grey_img[:,0]) < edge) and (np.average(grey_img[:,-1]) < edge))
+    if(has_black_edges):
+        blwh_img = (1.0 * (grey_img >= 0.4))
+        cov_m = np.cov(blwh_img)
+        box_idx = np.argwhere((cov_m) > 0.001)
+        outer_points = np.argmax(box_idx, axis=0)
+        height= np.abs(box_idx[outer_points[0],0] - box_idx[outer_points[0],1])
+        width = np.abs(box_idx[outer_points[1],0] - box_idx[outer_points[1],1])
+        sample = (tv.transforms.functional.resized_crop(image, top=box_idx[0,0], left=box_idx[0,1],height= height, width= width, size=grey_img.shape), label)
+    return sample
 
 def color_constancy():
     return
 
-def create_dataset_dir(path):
-    orig_path = os.path.join(os.path.join("/", "space"),"derma-data")
+"""Create new empty directory for dataset given original dataset directory.
 
-    if not os.path.isdir(path):
-        os.mkdir(path)
+    Keyword arguments:
+    target_path -- the path into which the new directory is copied
+    orig_path -- the original path of the dataset
+    """
+def create_dataset_dir(target_path, orig_path):
+
+    if not os.path.isdir(target_path):
+        os.mkdir(target_path)
 
     for img_class in classes:
-        class_directory = os.path.join(path, img_class)
+        class_directory = os.path.join(target_path, img_class)
         original_class_directory = os.path.join(orig_path, img_class)
         classes_dict[img_class] = class_directory
         file_names_per_class[img_class] = os.listdir(original_class_directory) 
-    if not os.path.isdir(class_directory):
-        os.mkdir(class_directory)
-    return
+        if not os.path.isdir(class_directory):
+            os.mkdir(class_directory)
 
-def save_images_to_directory(batch, idx):
+"""Save image given label and index in dataset into its corresponding class directory.
 
-    for count, image, label in enumerate(batch):
-        img = transforms.ToPILImage()
-        img_class = classes[label]
-        file_name = file_names_per_class[img_class][count + idx]
-        img.save(os.path.join(classes_dict[img_class],file_name),image)
-
+    Keyword arguments:
+    sample  -- (torch.Tensor, int) - tuple of a labelled image dataset
+    idx     -- index of sample in dataset 
+"""
+def save_image_to_directory(sample, idx):
+    image, label = sample
+    transform = transforms.ToPILImage()
+    image = transform(image)
+    img_class = classes[label]
+    file_name = file_names_per_class[img_class][idx]
+    image.save(os.path.join(classes_dict[img_class],file_name),"JPEG")
 
 def main():
     # load dataset untransformed 
-    root = os.path.join("/", "space")
-    whole_dataset = datasets.ImageFolder(os.path.join(root,"derma-data"), transforms.ToTensor())
-    data_loader = torch.utils.data.DataLoader(whole_dataset,
-                                                batch_size=32,
-                                                num_workers=8,
-                                                drop_last=False,
-                                                timeout=30000,
-                                                pin_memory=True)
-                                                
-    for idx, batch in enumerate(data_loader):
-        eliminate_blackedged_images = preprocess_images(batch)
-        create_dataset_dir(os.path.join(root, "derma-data-preprocessed"), eliminate_blackedged_images, idx)
-        save_images_to_directory(batch, idx)
+    root = os.path.expanduser("~/share-all/derma-data")
+    whole_dataset = datasets.ImageFolder(os.path.join(root,"archive"), transforms.ToTensor())
+    orig_path = os.path.join(os.path.expanduser("~/share-all/derma-data"),"archive")
+    create_dataset_dir(os.path.join(root,"archive-preprocessed"), orig_path)
+
+
+    for idx, sample in enumerate(whole_dataset):
+        changed_sample = preprocess_image(sample)
+        save_image_to_directory(changed_sample, idx)
 if __name__ == "__main__":
     main()
