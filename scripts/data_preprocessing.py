@@ -7,15 +7,20 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
 
+
+classes = ["AK", "BCC", "BKL", "DF", "MEL", "NV", "SCC", "VASC"]
+classes_dict = {}
+file_names_per_class = {}
+
+
+
 """
 Preprocess image to eliminate possible black edges around the image.
 
   Keyword arguments:
   sample  -- (torch.Tensor, int) - tuple of a labelled image dataset
 """
-classes = ["AK", "BCC", "BKL", "DF", "MEL", "NV", "SCC", "VASC"]
-classes_dict = {}
-file_names_per_class = {}
+
 def preprocess_image(sample):
     edge = 0.01
     image, label = sample
@@ -52,7 +57,6 @@ def create_dataset_dir(target_path, orig_path):
         file_names_per_class[img_class] = os.listdir(original_class_directory) 
         if not os.path.isdir(class_directory):
             os.mkdir(class_directory)
-
 """Save image given label and index in dataset into its corresponding class directory.
 
     Keyword arguments:
@@ -73,10 +77,14 @@ def main():
     whole_dataset = datasets.ImageFolder(os.path.join(root,"archive"), transforms.ToTensor())
     orig_path = os.path.join(os.path.expanduser("~/share-all/derma-data"),"archive")
     create_dataset_dir(os.path.join(root,"archive-preprocessed"), orig_path)
-
-
+    count = 0
+    sample_count = 1
     for idx, sample in enumerate(whole_dataset):
+        if((sample[1] == sample_count) and ((idx-count) == len(file_names_per_class[classes[sample[1] - 1]]))):
+            count = count + len(file_names_per_class[classes[sample[1] - 1]])
+            sample_count += 1
+            print("Current index:",idx,"Current idx-count:",idx - count,"Current class label:", sample[1],"Current count value:", count,"Current number of samples of the previous class:", len(file_names_per_class[classes[sample[1] - 1]]))
         changed_sample = preprocess_image(sample)
-        save_image_to_directory(changed_sample, idx)
+        save_image_to_directory(changed_sample, idx-count)
 if __name__ == "__main__":
     main()
