@@ -20,10 +20,12 @@ def setup_data(hparams, path=None):
     )
 
     train_transform = get_train_transforms(hparams["t"])
-    if hparams.get('path') != None:
-        root = os.path.join(hparams['path'])
+    root_path = os.path.join("space","derma-data","isic_2019")
+    if hparams.get('d') == 'original':
+        root = os.path.join(root_path, "clean")
     else:    
-        root = os.path.join("/", "space", "derma-data", "isic_2019", "clean")
+        root = os.path.join(root_path,"preprocessed")
+    print(f"Using the {hparams['d']} dataset.")
     print(f"Trainig transforms: {train_transform}")
     dataset = datasets.ImageFolder(root, base_transforms)
 
