@@ -73,10 +73,10 @@ def save_image_to_directory(sample, idx):
 
 def main():
     # load dataset untransformed 
-    root = os.path.expanduser("~/share-all/derma-data")
-    whole_dataset = datasets.ImageFolder(os.path.join(root,"archive"), transforms.ToTensor())
-    orig_path = os.path.join(os.path.expanduser("~/share-all/derma-data"),"archive")
-    create_dataset_dir(os.path.join(root,"archive-preprocessed"), orig_path)
+    root = os.path.join("/","space","derma-data", "isic_2019")
+    whole_dataset = datasets.ImageFolder(os.path.join(root,"clean"), transforms.ToTensor())
+    orig_path = os.path.join(root,"clean")
+    create_dataset_dir(os.path.join(root,"preprocessed"), orig_path)
     count = 0
     sample_count = 1
     for idx, sample in enumerate(whole_dataset):
