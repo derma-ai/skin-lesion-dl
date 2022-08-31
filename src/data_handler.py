@@ -20,7 +20,7 @@ def setup_data(hparams, path=None):
     )
 
     train_transform = get_train_transforms(hparams["t"], hparams["d"])
-    root_path = os.path.join("space","derma-data","isic_2019")
+    root_path = os.path.join("/","space","derma-data","isic_2019")
     if hparams.get('d') == 'original':
         root = os.path.join(root_path, "clean")
     else:    
