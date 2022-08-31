@@ -35,16 +35,16 @@ def setup_data(hparams, path=None):
     weights, _ = compute_weights(dataset, 1)
     train_data = Subset(dataset, train_data_idx, train_transform)
     val_data = Subset(dataset, val_data_idx, transforms.Resize((224,224)))
-    return train_data, val_data, weights, dataset
+    return train_data, val_data, weights
 
 
-def get_train_transforms(flags=None, dataset=None):
+def get_train_transforms(flags=None, dataset_flag=None):
     if flags is None or len(flags) == 0:
         # Default transforms
         return None
-    return nn.Sequential(*build_transform_list(flags, dataset))
+    return nn.Sequential(*build_transform_list(flags, dataset_flag))
 
-def build_transform_list(flags, dataset):
+def build_transform_list(flags, dataset_flag):
     transform_flags = flags.split(",")
     transforms_list = []
     transform = None # If there is no matching transform should remain None
@@ -57,22 +57,22 @@ def build_transform_list(flags, dataset):
             transform = transforms.RandomHorizontalFlip()
         elif flag == "gaussblur":
             transform = transforms.GaussianBlur()
-        elif flag == "colorjitter":
+        elif flag == "colorjitter": # worled
             transform = transforms.ColorJitter()
-        elif flag == "grayscale":
+        elif flag == "grayscale": # worked
             transform = transforms.Grayscale(num_output_channels=3)
-        elif flag == "randperspective":
+        elif flag == "randperspective": # worked 
             transform = transforms.RandomPerspective()
         elif flag == "randposterize":
-            transform = transforms.Compose([transforms.ToPILImage(mode="RGB"),transforms.RandomPosterize(bits=5),transforms.ToTensor()])
+            transform = nn.ModuleList([transforms.ToPILImage(mode="RGB"),transforms.RandomPosterize(bits=5),transforms.ToTensor()])
         elif flag == "randadjustsharpness":
-            transform = transforms.RandomAdjustSharpness(np.randint(5))
+            transform = transforms.RandomAdjustSharpness(np.random.randint(5))
         elif flag == "randomequalize": # currently not working because of TypeError: expects [0,255] but got [0,1] due to ToTensor
-            transform = transforms.Compose([transforms.ToPILImage(mode="RGB"),transforms.RandomEqualize(),transforms.ToTensor()])
+            transform = nn.ModuleList([transforms.ToPILImage(mode="RGB"),transforms.RandomEqualize(),transforms.ToTensor()])
         elif flag == "norm":
-            if dataset == "original":
+            if dataset_flag == "original":
                 transform = transforms.Normalize(mean=[0.624, 0.520, 0.504], std=[0.242, 0.223, 0.231])
-            elif dataset == "preprocessed":
+            elif dataset_flag == "preprocessed":
                 transform = transforms.Normalize(mean=[0.657, 0.548, 0.532], std=[0.204, 0.197, 0.208])
         if transform is not None:
             transforms_list.append(transform)
