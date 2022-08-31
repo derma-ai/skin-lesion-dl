@@ -19,7 +19,7 @@ def setup_data(hparams, path=None):
     ]
     )
 
-    train_transform = get_train_transforms(hparams["t"])
+    train_transform = get_train_transforms(hparams["t"], hparams["d"])
     root_path = os.path.join("space","derma-data","isic_2019")
     if hparams.get('d') == 'original':
         root = os.path.join(root_path, "clean")
@@ -38,13 +38,13 @@ def setup_data(hparams, path=None):
     return train_data, val_data, weights, dataset
 
 
-def get_train_transforms(flags=None):
+def get_train_transforms(flags=None, dataset=None):
     if flags is None or len(flags) == 0:
         # Default transforms
         return None
-    return nn.Sequential(*build_transform_list(flags))
+    return nn.Sequential(*build_transform_list(flags, dataset))
 
-def build_transform_list(flags):
+def build_transform_list(flags, dataset):
     transform_flags = flags.split(",")
     transforms_list = []
     transform = None # If there is no matching transform should remain None
@@ -69,7 +69,11 @@ def build_transform_list(flags):
             transform = transforms.RandomAdjustSharpness(np.randint(5))
         elif flag == "randomequalize": # currently not working because of TypeError: expects [0,255] but got [0,1] due to ToTensor
             transform = transforms.Compose([transforms.ToPILImage(mode="RGB"),transforms.RandomEqualize(),transforms.ToTensor()])
-            # add new cases here
+        elif flag == "norm":
+            if dataset == "original":
+                transform = transforms.Normalize(mean=[0.624, 0.520, 0.504], std=[0.242, 0.223, 0.231])
+            elif dataset == "preprocessed":
+                transform = transforms.Normalize(mean=[0.657, 0.548, 0.532], std=[0.204, 0.197, 0.208])
         if transform is not None:
             transforms_list.append(transform)
     transforms_list.append(transforms.Resize((224, 224)))

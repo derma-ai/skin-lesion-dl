@@ -102,6 +102,8 @@ def main():
                         default=10, help="Number of training epochs")
     parser.add_argument('-b', '--batch_size', type=int,
                         dest='batch_size', default=16, help="Batch size")
+    parser.add_argument('-d', '--dataset', type=str, 
+                        dest= 'dataset', default='preprocessed', help="Dataset type, e.g. '/preprocessed/ or /original/'")
     parser.add_argument('-lr', '--learning_rate', type=float,
                         dest='learning_rate', default=1e-3, help="Learning rate")
     parser.add_argument('-lrf', '--learning_rate_finder', type=int,
@@ -130,6 +132,7 @@ def main():
     hparams = {
         "e": args.max_epochs,
         "b": args.batch_size,
+        "d": args.dataset,
         "lr": args.learning_rate,
         "wd": args.weight_decay,
         "ws": args.weight_scheme,
