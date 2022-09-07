@@ -72,7 +72,8 @@ def train(gpu,
                                                        monitor='val_acc',
                                                        mode='max'
                                                        )
-    trainer = pl.Trainer(gpus=[gpu],
+    trainer = pl.Trainer(accelerator="gpu",
+                         devices=1,
                          max_epochs=hparams["e"],
                          logger=logger,
                          callbacks=[checkpoint_callback]
