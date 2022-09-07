@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 import os
-from importlib_metadata import metadata
 
 import pytorch_lightning as pl
 import numpy as np
