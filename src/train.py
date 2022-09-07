@@ -38,8 +38,7 @@ def add_visualization_on_tensorboard(logger, train_data):
 
 
 
-def train(gpu,
-          hparams,
+def train(hparams,
           checkpoint=None):
 
     train_data, val_data, weights = data_handler.setup_data(hparams)
@@ -125,8 +124,6 @@ def main():
                         help="Loss function'")
     parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
                         dest="checkpoint", help="Call model from checkpoint by version name")
-    parser.add_argument('-gpu', '--gpu', type=int, default=None,
-                        dest="gpu", help="On which GPU to train")
     args = parser.parse_args()
 
     print(f"Using {args.model} model")
@@ -146,8 +143,7 @@ def main():
     }
 
     set_seed()
-    train(args.gpu,
-          hparams,
+    train(hparams,
           checkpoint=args.checkpoint
           )
 
