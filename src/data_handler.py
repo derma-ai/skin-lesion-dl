@@ -1,4 +1,6 @@
 import os
+from platform import platform
+import platform
 
 import numpy as np
 import torch
@@ -9,18 +11,23 @@ import torchvision.datasets as datasets
 from sklearn.model_selection import train_test_split
 
 from subset import Subset
+from color_constancy import compute_color_constancy
 
 def setup_data(hparams, path=None):
     # This somehow makes the performance terrible.
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     base_transforms = transforms.Compose([
-        transforms.ToTensor()   
+        transforms.ToTensor(),
+        transforms.Lambda(compute_color_constancy)
     ]
     )
 
     train_transform = get_train_transforms(hparams["t"], hparams["d"])
-    root_path = os.path.join("/","space","derma-data","isic_2019")
+    if(platform.system()=="Linux"):
+        root_path = os.path.join("/","space","derma-data","isic_2019")
+    else:
+        root_path = os.path.expanduser("~/share-all/derma-data/")
     if hparams.get('d') == 'original':
         root = os.path.join(root_path, "clean")
     else:    
@@ -55,9 +62,9 @@ def build_transform_list(flags, dataset_flag):
             transform = transforms.RandomVerticalFlip()
         elif flag == "hflip":
             transform = transforms.RandomHorizontalFlip()
-        elif flag == "gaussblur":
+        elif flag == "gaussblur": 
             transform = transforms.GaussianBlur()
-        elif flag == "colorjitter": # worled
+        elif flag == "colorjitter": # worked
             transform = transforms.ColorJitter()
         elif flag == "grayscale": # worked
             transform = transforms.Grayscale(num_output_channels=3)
@@ -73,7 +80,7 @@ def build_transform_list(flags, dataset_flag):
             if dataset_flag == "original":
                 transform = transforms.Normalize(mean=[0.624, 0.520, 0.504], std=[0.242, 0.223, 0.231])
             elif dataset_flag == "preprocessed":
-                transform = transforms.Normalize(mean=[0.657, 0.548, 0.532], std=[0.204, 0.197, 0.208])
+                transform = transforms.Normalize(mean=[0.599, 0.578, 0.566], std=[0.185, 0.202, 0.211])
         if transform is not None:
             transforms_list.append(transform)
     transforms_list.append(transforms.Resize((224, 224)))

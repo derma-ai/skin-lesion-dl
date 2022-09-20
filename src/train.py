@@ -35,7 +35,21 @@ def add_visualization_on_tensorboard(logger, train_data):
     # add a projector to visualize
     logger.experiment.add_embedding(features, metadata=class_labels, label_img = images)
 
-
+def add_latent_space_visualization_on_tensorboard(logger, train_data, model):
+    perm = torch.randperm(len(train_data))
+    perm = perm[:10000]
+    images = []
+    labels = []
+    for idx in perm:
+        image,label = train_data[idx]
+        images.append(image)
+        labels.append(label)
+    class_labels = [train_data.classes[label] for label in labels]
+    images = torch.stack(images)
+    latent_variables = model.forward(images)
+    features = images.view(-1, np.prod(latent_variables.size()))
+    # add a projector to visualize
+    logger.experiment.add_embedding(features, metadata=class_labels)
 
 def train(hparams,
           checkpoint=None):
@@ -52,7 +66,7 @@ def train(hparams,
         class_weights=weights
     )
     model = builder.create(checkpoint)
-
+    
     version_name=f'{hparams["ex"]}-{hparams["m"]}-bs={hparams["b"]}'
     logger = TensorBoardLogger(version=version_name,
                                 save_dir="./",
@@ -60,7 +74,7 @@ def train(hparams,
                                 )
     # visualize metrics on tensorboard
     add_visualization_on_tensorboard(logger, train_data)
-
+    #add_latent_space_visualization_on_tensorboard(logger, train_data, model)
 
     checkpoint_callback = pl.callbacks.ModelCheckpoint(dirpath='./checkpoints',
                                                        filename=f'{version_name}'+'-{epoch}' + f'-bs={hparams["b"]}' + '{val_acc:.2f}',
