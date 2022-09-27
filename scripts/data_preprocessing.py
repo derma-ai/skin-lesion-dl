@@ -36,37 +36,7 @@ def preprocess_image(sample):
         width = np.abs(box_idx[outer_points[1],0] - box_idx[outer_points[1],1])
         sample = (tv.transforms.functional.resized_crop(image, top=box_idx[0,0], left=box_idx[0,1],height= height, width= width, size=grey_img.shape), label)
     return sample
-""" Adjust illumination of image with the Shades of Gray Color Constancy algorithm, adopted from:
 
-    Nick Shawn, Shades_of_Gray-color_constancy_transformation, 2018, Github Repository
-    Link: https://github.com/nickshawn/Shades_of_Gray-color_constancy_transformation
-
-    Keyword arguments:
-    image -- pytorch tensor image
-    p_power -- power of Minkowski - norm
-    gamma -- gamma - value for gamma correction
-"""
-def color_constancy(image, p_power= 6, gamma = None):
-    image = image.numpy()
-        
-    if gamma is not None:
-        image = np.round(image * 255.0)
-        image = image.astype('uint8')
-        look_up_table = np.zeros((256,1), dtype='uint8')
-        for i in range(256):
-            look_up_table[i][0] = 255*pow(i/255, 1/gamma)
-        image = cv2.LUT(image, look_up_table)
-        image = image * (1/255.0)
-
-    img = image.astype('float32')
-    img_power = np.power(img, p_power)
-    rgb_vec = np.power(np.mean(img_power, (1,2)), 1/p_power)
-    rgb_norm = np.sqrt(np.sum(np.power(rgb_vec, 2.0)))
-    rgb_vec = rgb_vec/rgb_norm
-    rgb_vec = 1/(rgb_vec*np.sqrt(3))
-    img = np.multiply(img, rgb_vec[:, None, None])
-    np.where(image > 1, image, 1.0)
-    return torch.from_numpy(img)
 
 """Create new empty directory for dataset given original dataset directory.
 
@@ -114,7 +84,6 @@ def main():
             count = count + len(file_names_per_class[classes[sample[1] - 1]])
             sample_count += 1
         changed_sample = preprocess_image(sample)
-        changed_sample = color_constancy(changed_sample)
         save_image_to_directory(changed_sample, idx-count)
 if __name__ == "__main__":
     main()

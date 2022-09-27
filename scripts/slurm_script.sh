@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/bash -l
 
-#SBATCH --job-name=processing-experiment
+#SBATCH --job-name=weighted_focal
 #SBATCH --output=res.txt
 #SBATCH --error=res.err
 
@@ -8,9 +8,6 @@
 # #SBATCH --cpus-per-task=8
 # #SBATCH --gpus=2
 
-CUDA_VISIBLE_DEVICES=0
 
-source /u/home/podszun/.bashrc
 source activate idp_env
-srun which python
-srun train.sh
+srun ./train.sh 0

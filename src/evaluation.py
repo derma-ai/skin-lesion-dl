@@ -22,7 +22,7 @@ def set_seed(seed=15):
 
 def test(hparams, checkpoint_path, gpu):
     set_seed()
-    _, dataset, _, _ = data_handler.setup_data(hparams, None)
+    _, dataset, _ = data_handler.setup_data(hparams, None)
     builder = ExperimentBuilder(hparams)
     model = builder.create()
 
@@ -32,8 +32,7 @@ def test(hparams, checkpoint_path, gpu):
     model.load_state_dict(checkpoint['state_dict'])
 
     trainer = pl.Trainer(gpus=[gpu],
-                         logger=False,
-                         checkpoint_callback=False,
+                         logger=False
                          )
 
     data_loader = torch.utils.data.DataLoader(dataset,
@@ -83,6 +82,8 @@ def main():
                         dest="gpu", help="On which GPU to train")
     parser.add_argument('-p', '--path', type=str, default=None,
                         dest='path', help="Path to dataset root folder")
+    parser.add_argument('-d', '--dataset', type=str, default="preprocessed",
+                        dest='dataset', help="Version of ISIC2019 of dataset to use")             
     args = parser.parse_args()
 
     hparams = {
@@ -93,6 +94,7 @@ def main():
         "m": args.model,
         "t": args.transforms,
         "l": args.loss,
+        "d": args.dataset,
         "res": (args.width, args.height)
     }
     test(hparams, args.checkpoint, args.gpu)

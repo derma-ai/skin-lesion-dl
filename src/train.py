@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import matplotlib as plt
 from pytorch_lightning.loggers import TensorBoardLogger
-
+from sklearn.decomposition import PCA
 from experiment_builder import ExperimentBuilder
 import data_handler
 
@@ -22,7 +22,7 @@ def set_seed(seed=15):
 
 def add_visualization_on_tensorboard(logger, train_data):
     perm = torch.randperm(len(train_data))
-    perm = perm[:100]
+    perm = perm[:10]
     images = []
     labels = []
     for idx in perm:
@@ -31,25 +31,14 @@ def add_visualization_on_tensorboard(logger, train_data):
         labels.append(label)
     class_labels = [train_data.classes[label] for label in labels]
     images = torch.stack(images)
+    print("Shape of images", images.size())
     features = images.view(-1,3*224*224)
+    print("Shape of features", features.size())
     # add a projector to visualize
     logger.experiment.add_embedding(features, metadata=class_labels, label_img = images)
 
-def add_latent_space_visualization_on_tensorboard(logger, train_data, model):
-    perm = torch.randperm(len(train_data))
-    perm = perm[:10000]
-    images = []
-    labels = []
-    for idx in perm:
-        image,label = train_data[idx]
-        images.append(image)
-        labels.append(label)
-    class_labels = [train_data.classes[label] for label in labels]
-    images = torch.stack(images)
-    latent_variables = model.forward(images)
-    features = images.view(-1, np.prod(latent_variables.size()))
-    # add a projector to visualize
-    logger.experiment.add_embedding(features, metadata=class_labels)
+
+    
 
 def train(hparams,
           checkpoint=None):
@@ -159,6 +148,7 @@ def main():
     train(hparams,
           checkpoint=args.checkpoint
           )
+    
 
 
 if __name__ == "__main__":

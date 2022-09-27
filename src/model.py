@@ -47,6 +47,7 @@ class Classifier(pl.LightningModule):
         self.extractor = extractor
         self.classifier = classifier
         self.loss = loss
+        self.save_hyperparameters("hparams")
 
         self.configure_metrics()
 
