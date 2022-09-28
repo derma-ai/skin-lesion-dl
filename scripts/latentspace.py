@@ -2,7 +2,7 @@ import os
 import sys
 
 from torch.utils.data import DataLoader
-
+from sklearn.preprocessing import StandardScaler
 import platform
 from argparse import ArgumentParser
 
@@ -34,6 +34,9 @@ def compute_latent_space_representation(model, data_loader:DataLoader):
             latent_points = np.zeros((len(data_loader.dataset),model.extractor(X).size(dim=1)))
         if(idx % 50 == 0):
             print(f"Currently at index {idx} of {len(data_loader)}")
+        
+        #if(idx ==100):
+         #   break
         latent_variables = model.extractor(X).squeeze()
         labels[idx*y.size(dim=0): (idx+1)*y.size(dim=0)] = y.detach().numpy()[:,None]
         latent_points[idx*y.size(dim=0): (idx+1)*y.size(dim=0)] = latent_variables.detach().numpy()
@@ -41,6 +44,7 @@ def compute_latent_space_representation(model, data_loader:DataLoader):
 
     
 def visualize_latent_space(latent_points, labels, idx_to_class):
+    latent_points = StandardScaler(with_mean=True,with_std=True).fit_transform(latent_points)
     pca = PCA(n_components=2)
     pca.fit(latent_points)
     dim_red_latent_points = pca.transform(latent_points)
@@ -48,12 +52,13 @@ def visualize_latent_space(latent_points, labels, idx_to_class):
     colors_dict = {0: '#F5B041',1: '#ABEBC6',2: '#465AFF',3: '#FF4233',4: '#A44AFE',5: '#FF60C3',6: '#A4FF60', 7: '#116F95'}
     scatter_points_x = dim_red_latent_points[0]
     scatter_points_y = dim_red_latent_points[1]
-    fig, ax =plt.subplots((3,3))
+    fig, ax =plt.subplots(3,3)
     for class_index in np.unique(labels):
         index_x = np.squeeze(labels == class_index)
-        ax[(int(class_index/3)),(class_index%3)].scatter(scatter_points_x[index_x], scatter_points_y[index_x], c=colors_dict[class_index], label= idx_to_class[class_index])
+        ax[(int(class_index/3)),int((class_index%3))].scatter(scatter_points_x[index_x], scatter_points_y[index_x], c=colors_dict[class_index], label= idx_to_class[class_index])
         ax[2,2].scatter(scatter_points_x[index_x], scatter_points_y[index_x], c=colors_dict[class_index], label= idx_to_class[class_index])
-    ax.legend()
+        ax[(int(class_index/3)),int((class_index%3))].legend()
+    ax[2,2].legend()
     plt.show()
 
 def get_dataloader(dataset:str):
