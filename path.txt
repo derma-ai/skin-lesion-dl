@@ -1,1 +1,0 @@
-/u/home/podszun/IDP/derma_ai_idp/scripts/checkpoints/'Classic weighted sampling on preprocessed images-efficientnet_b0-bs=32-epoch=354-bs=32val_acc=0.84.ckpt'
