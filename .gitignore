@@ -5,3 +5,4 @@ src/__pycache__
 nohup*
 .vscode
 experiment_1_find_models_Loss:WCE_1_over_NC_OSR:1.5_NotNormalized_Different_Res
+.png
