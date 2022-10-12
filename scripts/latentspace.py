@@ -103,25 +103,25 @@ def visualize_latent_space(idx_to_class, ex_name, method='pca', do_scaling=False
     scatter_points_y = dim_red_latent_points[1]
     scatter_points_z = dim_red_latent_points[2]
 
-    lower_x_lim = min(scatter_points_x) - 5
-    upper_x_lim = max(scatter_points_x) + 5
-    lower_y_lim = min(scatter_points_y) - 5
-    upper_y_lim = max(scatter_points_y) + 5
-    lower_z_lim = min(scatter_points_z) - 5
-    upper_z_lim = max(scatter_points_z) + 5
+    
+    lower_lim = -25
+    upper_lim = 25
 
 
     # Generate 2D plots of latent space points
     fig, ax = plt.subplots(3,3)
     for class_index in np.unique(labels):
         index_x = np.squeeze(labels == class_index)
+        centroid_x = np.mean(scatter_points_x[index_x])/len(scatter_points_x[index_x])
+        centroid_y = np.mean(scatter_points_y[index_x])/len(scatter_points_y[index_x])
+        ax[(int(class_index/3)),int((class_index%3))].scatter(centroid_x,centroid_y, c='#db5b00')
         ax[(int(class_index/3)),int((class_index%3))].scatter(scatter_points_x[index_x], scatter_points_y[index_x], c=colors_dict[class_index], label= idx_to_class[class_index])
         ax[2,2].scatter(scatter_points_x[index_x], scatter_points_y[index_x], c=colors_dict[class_index], label= idx_to_class[class_index])
-        ax[(int(class_index/3)),int((class_index%3))].set_xlim([lower_x_lim,upper_x_lim])
-        ax[(int(class_index/3)),int((class_index%3))].set_ylim([lower_y_lim,upper_x_lim])
+        ax[(int(class_index/3)),int((class_index%3))].set_xlim([lower_lim,upper_lim])
+        ax[(int(class_index/3)),int((class_index%3))].set_ylim([lower_lim,upper_lim])
         ax[(int(class_index/3)),int((class_index%3))].legend()
-    ax[2,2].set_xlim([lower_x_lim, upper_x_lim])
-    ax[2,2].set_ylim([lower_y_lim, upper_y_lim])
+    ax[2,2].set_xlim([lower_lim, upper_lim])
+    ax[2,2].set_ylim([lower_lim, upper_lim])
     ax[2,2].legend()
     fig.set_size_inches(20,10)
     plt.savefig(f"{method}_2-components{'_scaled' if do_scaling else ''}.png", bbox_inches='tight', dpi=300)
@@ -135,8 +135,8 @@ def visualize_latent_space(idx_to_class, ex_name, method='pca', do_scaling=False
     ax[0].set_xlabel('X', fontsize=10)
     ax[0].set_ylabel('Y', fontsize=10)
     ax[0].set_title('X-Y')
-    ax[0].set_xlim([lower_x_lim, upper_x_lim])
-    ax[0].set_ylim([lower_y_lim, upper_y_lim])
+    ax[0].set_xlim([lower_lim, upper_lim])
+    ax[0].set_ylim([lower_lim, upper_lim])
 
     for class_index in np.unique(labels):
         index_x = np.squeeze(labels == class_index)
@@ -145,8 +145,8 @@ def visualize_latent_space(idx_to_class, ex_name, method='pca', do_scaling=False
     ax[1].set_xlabel('X', fontsize=10)
     ax[1].set_ylabel('Z', fontsize=10)
     ax[1].set_title('X-Z')
-    ax[1].set_xlim([lower_x_lim, upper_x_lim])
-    ax[1].set_ylim([lower_z_lim, upper_z_lim])
+    ax[1].set_xlim([lower_lim, upper_lim])
+    ax[1].set_ylim([lower_lim, upper_lim])
 
     for class_index in np.unique(labels):
         index_x = np.squeeze(labels == class_index)
@@ -155,8 +155,8 @@ def visualize_latent_space(idx_to_class, ex_name, method='pca', do_scaling=False
     ax[2].set_xlabel('Y', fontsize=10)
     ax[2].set_ylabel('Z', fontsize=10)
     ax[2].set_title('Y-Z')
-    ax[2].set_xlim([lower_y_lim, upper_y_lim])
-    ax[2].set_ylim([lower_z_lim, upper_z_lim])
+    ax[2].set_xlim([lower_lim, upper_lim])
+    ax[2].set_ylim([lower_lim, upper_lim])
     fig.set_size_inches(40,10)
     plt.savefig(f"{method}_3-components{'_scaled' if do_scaling else ''}_2d-projections.png", bbox_inches='tight', dpi=300)
 
@@ -169,9 +169,9 @@ def visualize_latent_space(idx_to_class, ex_name, method='pca', do_scaling=False
     ax.set_xlabel('X', fontsize=10)
     ax.set_ylabel('Y', fontsize=10)
     ax.set_zlabel('Z', fontsize=10)
-    ax.set_xlim([lower_x_lim, upper_x_lim])
-    ax.set_ylim([lower_y_lim, upper_y_lim])
-    ax.set_zlim([lower_z_lim, upper_z_lim])
+    ax.set_xlim([lower_lim, upper_lim])
+    ax.set_ylim([lower_lim, upper_lim])
+    ax.set_zlim([lower_lim, upper_lim])
     ax.legend()
     fig.set_size_inches(10,10)
     plt.savefig(f"{method}_3-components{'_scaled' if do_scaling else ''}_3d.png", bbox_inches='tight', dpi=300)

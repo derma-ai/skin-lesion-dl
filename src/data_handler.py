@@ -62,7 +62,7 @@ def build_transform_list(flags, dataset_flag):
             transform = transforms.RandomVerticalFlip()
         elif flag == "hflip":
             transform = transforms.RandomHorizontalFlip()
-        elif flag == "gaussblur": 
+        elif flag == "gaussblur": # worked
             transform = transforms.GaussianBlur(kernel_size= (10,10))
         elif flag == "colorjitter": # worked
             transform = transforms.ColorJitter()
@@ -71,7 +71,7 @@ def build_transform_list(flags, dataset_flag):
         elif flag == "randperspective": # worked 
             transform = transforms.RandomPerspective()
         elif flag == "randposterize":
-            transform = transforms.Compose([transforms.ToPILImage(mode="RGB"),transforms.RandomPosterize(bits=5),transforms.ToTensor()])
+            transform = nn.ModuleList([transforms.ToPILImage(mode="RGB"),transforms.RandomPosterize(bits=5),transforms.ToTensor()])
         elif flag == "randadjustsharpness":
             transform = transforms.RandomAdjustSharpness(np.random.randint(5))
         elif flag == "randomequalize": # currently not working because of TypeError: expects [0,255] but got [0,1] due to ToTensor

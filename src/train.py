@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from logging import root
 import os
 
 import pytorch_lightning as pl
@@ -9,6 +10,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.decomposition import PCA
 from experiment_builder import ExperimentBuilder
 import data_handler
+import platform
 
 def set_seed(seed=15):
     import random
@@ -64,8 +66,11 @@ def train(hparams,
     # visualize metrics on tensorboard
     add_visualization_on_tensorboard(logger, train_data)
     #add_latent_space_visualization_on_tensorboard(logger, train_data, model)
-
-    checkpoint_callback = pl.callbacks.ModelCheckpoint(dirpath='./checkpoints',
+    if(platform.system()=="Linux"):
+            root_path = os.path.join("/","space","derma-data")
+    else:
+            root_path = os.path.expanduser("~/share-all/derma-data/")
+    checkpoint_callback = pl.callbacks.ModelCheckpoint(dirpath=root_path + "/checkpoints/",
                                                        filename=f'{version_name}'+'-{epoch}' + f'-bs={hparams["b"]}' + '{val_acc:.5f}',
                                                        save_top_k=3,
                                                        every_n_epochs=5,
