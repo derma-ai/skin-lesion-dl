@@ -131,7 +131,7 @@ def main():
                         help="Loss function'")
     parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
                         dest="checkpoint", help="Call model from checkpoint by version name")
-    parser.add_argument('-gpu', type=str, default=None,
+    parser.add_argument('-gpu', type=int, default=None,
                         dest="gpu")
     args = parser.parse_args()
 
