@@ -42,7 +42,7 @@ def add_visualization_on_tensorboard(logger, train_data):
 
     
 
-def train(hparams,
+def train(hparams, gpu,
           checkpoint=None):
 
     train_data, val_data, weights = data_handler.setup_data(hparams)
@@ -67,7 +67,7 @@ def train(hparams,
     add_visualization_on_tensorboard(logger, train_data)
     #add_latent_space_visualization_on_tensorboard(logger, train_data, model)
     if(platform.system()=="Linux"):
-            root_path = os.path.join("/","space","derma-data")
+            root_path = os.path.join("/","space","derma-data","isic_2019")
     else:
             root_path = os.path.expanduser("~/share-all/derma-data/")
     checkpoint_callback = pl.callbacks.ModelCheckpoint(dirpath=root_path + "/checkpoints/",
@@ -79,7 +79,7 @@ def train(hparams,
                                                        mode='max'
                                                        )
     trainer = pl.Trainer(accelerator="gpu",
-                         devices=1,
+                         devices=[gpu],
                          max_epochs=hparams["e"],
                          logger=logger,
                          callbacks=[checkpoint_callback]
@@ -131,6 +131,8 @@ def main():
                         help="Loss function'")
     parser.add_argument('-ckpt', '--checkpoint', type=str, default=None,
                         dest="checkpoint", help="Call model from checkpoint by version name")
+    parser.add_argument('-gpu', type=str, default=None,
+                        dest="gpu")
     args = parser.parse_args()
 
     print(f"Using {args.model} model")
@@ -146,12 +148,14 @@ def main():
         "t": args.transforms,
         "l": args.loss,
         "osr": args.osr,
-        "lrf": args.learning_rate_finder
+        "lrf": args.learning_rate_finder,
+        "gpu": args.gpu
     }
 
     set_seed()
     train(hparams,
-          checkpoint=args.checkpoint
+          checkpoint=args.checkpoint,
+          gpu=args.gpu
           )
     
 

@@ -70,16 +70,12 @@ def build_transform_list(flags, dataset_flag):
             transform = transforms.Grayscale(num_output_channels=3)
         elif flag == "randperspective": # worked 
             transform = transforms.RandomPerspective()
-        elif flag == "randposterize":
-            transform = nn.ModuleList([transforms.ToPILImage(mode="RGB"),transforms.RandomPosterize(bits=5),transforms.ToTensor()])
         elif flag == "randadjustsharpness":
             transform = transforms.RandomAdjustSharpness(np.random.randint(5))
-        elif flag == "randomequalize": # currently not working because of TypeError: expects [0,255] but got [0,1] due to ToTensor
-            transform = transforms.Compose([transforms.ToPILImage(mode="RGB"),transforms.RandomEqualize(),transforms.ToTensor()])
         elif flag == "norm":
             if dataset_flag == "original":
                 transform = transforms.Normalize(mean=[0.624, 0.520, 0.504], std=[0.242, 0.223, 0.231])
-            elif dataset_flag == "preprocessed":
+            elif dataset_flag == "preprocessed": 
                 transform = transforms.Normalize(mean=[0.599, 0.578, 0.566], std=[0.185, 0.202, 0.211])
         if transform is not None:
             transforms_list.append(transform)

@@ -22,11 +22,11 @@ def set_seed(seed=15):
 
 def test(hparams, checkpoint_path, gpu):
     set_seed()
-    _, dataset, _ = data_handler.setup_data(hparams, None)
+    _,dataset, _ = data_handler.setup_data(hparams, None)
     builder = ExperimentBuilder(hparams)
     model = builder.create()
 
-    checkpoint = torch.load(checkpoint_path)
+    checkpoint = torch.load(checkpoint_path, map_location="cuda:0")
     # This destroys loading for some reason?
     checkpoint["state_dict"].pop("loss.weight")
     model.load_state_dict(checkpoint['state_dict'])
