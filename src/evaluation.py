@@ -36,7 +36,7 @@ def test(hparams, checkpoint_path, gpu):
                          )
 
     data_loader = torch.utils.data.DataLoader(dataset,
-                                              batch_size=16,
+                                              batch_size=32,
                                               num_workers=8,
                                               drop_last=False,
                                               timeout=30000,
@@ -87,8 +87,8 @@ def main():
     args = parser.parse_args()
 
     hparams = {
-        "e": 10,
-        "b": 16,
+        "e": 200,
+        "b": 32,
         "lr": 1e-3,
         "wd": 1e-8,
         "m": args.model,

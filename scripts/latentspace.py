@@ -15,7 +15,7 @@ import torchvision.transforms as transforms
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
-
+import seaborn as sns
 from torch import Tensor
 
 script_dir = os.path.dirname('__file__')
@@ -46,7 +46,7 @@ def set_seed(seed=15):
     model: A pretrained model
     data_loader: A dataloader that provides the data to be visualized
 """
-def compute_latent_space_representation(model, data_loader:DataLoader, ex_name:str):
+def compute_latent_space_representation(model, data_loader:DataLoader, ex_name:str, val:bool):
 
     #Put model in eval mode
     model.eval()
@@ -78,36 +78,136 @@ def compute_latent_space_representation(model, data_loader:DataLoader, ex_name:s
 
     if not os.path.isdir(f"{root_path}{ex_name}"):
         os.mkdir(f"{root_path}{ex_name}")
-    np.save(f"{root_path}{ex_name}/labels.npy",labels)
-    np.save(f"{root_path}{ex_name}/latent_vectors.npy",latent_points)
-
+    np.save(f"{root_path}{ex_name}/{'validation_set_' if val else 'training_set_'}labels.npy",labels)
+    np.save(f"{root_path}{ex_name}/{'validation_set_' if val else 'training_set_'}latent_vectors.npy",latent_points)
     return latent_points, labels
 
 
-def visualize_latent_space(idx_to_class, ex_name, method='pca', do_scaling=False):
+def visualize_latent_space_classes(idx_to_class, ex_name, method='pca', do_scaling=False):
     if(platform.system()=="Linux"):
         root_path = os.path.join("/","space","derma-data")
     else:
         root_path = os.path.expanduser("~/share-all/derma-data/")
+
     # Load generated latent variables
-    latent_points = np.load(f"{root_path}{ex_name}/latent_vectors.npy")
-    labels = np.load(f"{root_path}{ex_name}/labels.npy")
+    train_latent_points = np.load(f"{root_path}{ex_name}/training_set_latent_vectors.npy")
+    train_labels = np.load(f"{root_path}{ex_name}/training_set_labels.npy")
+
+    val_latent_points = np.load(f"{root_path}{ex_name}/validation_set_latent_vectors.npy")
+    val_labels = np.load(f"{root_path}{ex_name}/validation_set_labels.npy")
+    
+    print(train_labels.shape, val_labels.shape)
+
+    train_latent_points = train_latent_points[::100]
+    train_labels = train_labels[::100]
+
+    val_latent_points = val_latent_points[::10]
+    val_labels = val_labels[::10]
+
+    
+    print(train_labels.shape, val_labels.shape)
+    if do_scaling:
+        train_latent_points = StandardScaler(with_mean=True,with_std=True).fit_transform(train_latent_points)
+        val_latent_points = StandardScaler(with_mean=True,with_std=True).fit_transform(val_latent_points)
+    if method == 'pca':
+        pca = PCA(n_components=3)
+    else:
+        pca = TSNE(n_components=3)
+
+    train_dim_red_latent_points = pca.fit_transform(train_latent_points)
+    val_dim_red_latent_points = pca.fit_transform(val_latent_points)
+
+    train_dim_red_latent_points = np.transpose(train_dim_red_latent_points)
+    
+    val_dim_red_latent_points = np.transpose(val_dim_red_latent_points)
+    
+    train_colors_dict = {0: '#ad6c02',1: '#14e06a',2: '#0315a8',3: '#ab0909',4: '#5603a8',5: '#c41a84',6: '#63b327', 7: '#0480b3'}
+    val_colors_dict ={0:'#f5a727', 1: '#8eedb6', 2:'#465AFF',3: '#e05353',4: '#b371f5', 5:'#f277c4',6:'#acf277',7:'#68c3e8'}
+    
+    
+    train_scatter_points_x = train_dim_red_latent_points[0]
+    train_scatter_points_y = train_dim_red_latent_points[1]
+
+    val_scatter_points_x = val_dim_red_latent_points[0]
+    val_scatter_points_y = val_dim_red_latent_points[1]
+
+
+    lower_lim = -25
+    upper_lim = 25
+
+
+    # Generate 2D plots of latent space points
+    fig, ax = plt.subplots(3,3)
+    columns_headers = []
+    for class_index in np.unique(train_labels):
+        train_index_x = np.squeeze(train_labels == class_index)
+        
+        val_index_x = np.squeeze(val_labels == class_index)
+
+        train_centroid_x = np.mean(train_scatter_points_x[train_index_x])
+        train_centroid_y = np.mean(train_scatter_points_y[train_index_x])
+        
+        #val_centroid_x = np.mean(val_scatter_points_x[val_index_x])
+        #val_centroid_y = np.mean(val_scatter_points_y[val_index_x])
+        
+        columns_headers.append(idx_to_class[class_index])
+        # set up individual legend
+        leftmarker =  ax[(int(class_index/3)),int((class_index%3))].plot([],[], c=train_colors_dict[class_index], fillstyle="left",linestyle='none')
+        rightmarker =  ax[(int(class_index/3)),int((class_index%3))].plot([],[], c=val_colors_dict[class_index], fillstyle="right",linestyle='none')
+        
+        ax[(int(class_index/3)),int((class_index%3))].legend((leftmarker,rightmarker), idx_to_class[class_index], numpoints=1,loc="upper right")
+
+        # scatter training set points
+        ax[(int(class_index/3)),int((class_index%3))].scatter(train_scatter_points_x[train_index_x], train_scatter_points_y[train_index_x], c=train_colors_dict[class_index], label= idx_to_class[class_index])
+        #ax[2,2].scatter(train_scatter_points_x[index_x], train_scatter_points_y[index_x], c=train_colors_dict[class_index], label= idx_to_class[class_index]) 
+        ax[(int(class_index/3)),int((class_index%3))].scatter(train_centroid_x,train_centroid_y, c='#db5b00')
+
+        # scatter validation set points
+        ax[(int(class_index/3)),int((class_index%3))].scatter(val_scatter_points_x[val_index_x], val_scatter_points_y[val_index_x], c=val_colors_dict[class_index], label= idx_to_class[class_index])
+        ax[2,2].scatter(val_scatter_points_x[val_index_x], val_scatter_points_y[val_index_x], c=val_colors_dict[class_index], label= idx_to_class[class_index])
+        ax[(int(class_index/3)),int((class_index%3))].set_xlim([lower_lim,upper_lim])
+        ax[(int(class_index/3)),int((class_index%3))].set_ylim([lower_lim,upper_lim])
+        #ax[(int(class_index/3)),int((class_index%3))].scatter(val_centroid_x,val_centroid_y, c='#db5b00')
+        
+    
+    ax[2,2].set_xlim([lower_lim, upper_lim])
+    ax[2,2].set_ylim([lower_lim, upper_lim])
+    fig.set_size_inches(20,10)
+    plt.savefig(f"{ex_name}_{method}_2-components{'_scaled' if do_scaling else ''}validation_vs_training.png", bbox_inches='tight', dpi=300)
+
+
+
+
+def visualize_latent_space(idx_to_class, ex_name, val, method='pca', do_scaling=False):
+    if(platform.system()=="Linux"):
+        root_path = os.path.join("/","space","derma-data")
+    else:
+        root_path = os.path.expanduser("~/share-all/derma-data/")
+
+    # Load generated latent variables
+    latent_points = np.load(f"{root_path}{ex_name}/{'validation_set_' if val else 'training_set_'}latent_vectors.npy")
+    labels = np.load(f"{root_path}{ex_name}/{'validation_set_' if val else 'training_set_'}labels.npy")
 
     # Dirty hack to speed up computation. Choose only every 10th element. Can be deleted to allow for the whole dataset to be considered
     latent_points = latent_points[::10]
     labels = labels[::10]
     centroids = np.zeros((8,latent_points.shape[1]))
     mean_distances = np.ndarray((8,8))
+    # Compute centroid for each class
     for class_index in np.unique(labels):
         indices = (labels == class_index)
         centroids[class_index]= np.mean(latent_points[indices[:,0],:], axis=0)
-        print("centroids",centroids.shape,np.mean(latent_points[indices[:,0],:], axis=0).shape, centroids)
+    # Compute mean distances of class specific latent points to each centroid
+    for class_index in np.unique(labels):
+        indices = (labels == class_index)
         distances = np.linalg.norm(latent_points[np.newaxis,indices[:,0],:] - centroids[:,np.newaxis,:], axis=2)
-        print("Distances",distances.shape,np.mean(distances, axis=1).shape)
         mean_distances[class_index] = np.mean(distances, axis=1)
-    print("Mean distances", mean_distances.shape)
-    mean_distances *= np.tri(*mean_distances.shape)
     mean_distances = mean_distances.round(4)
+    # Heatmap of mean distances
+    fig = plt.figure(figsize=(8,5))
+    sns.heatmap(mean_distances,annot= mean_distances.astype(int),cmap="vlag",fmt="g", center=60, xticklabels=["AK-C","BCC-C","BKL-C","DF-C","MEL-C","NV-C","SCC-C","VASC-C"],yticklabels=["AK","BCC","BKL","DF","MEL","NV","SCC","VASC"])
+    plt.savefig(f"{ex_name}_latent_space_mean_distances_to_centroids{'_validation_set' if val else ''}.png", bbox_inches='tight', dpi=300)
+
     if do_scaling:
         latent_points = StandardScaler(with_mean=True,with_std=True).fit_transform(latent_points)
 
@@ -136,8 +236,7 @@ def visualize_latent_space(idx_to_class, ex_name, method='pca', do_scaling=False
 
 
     # Generate 2D plots of latent space points
-    fig, ax = plt.subplots(4,3)
-    rows = ["Mean distance from center point"]
+    fig, ax = plt.subplots(3,3)
     columns_headers = []
     for class_index in np.unique(labels):
         index_x = np.squeeze(labels == class_index)
@@ -154,14 +253,8 @@ def visualize_latent_space(idx_to_class, ex_name, method='pca', do_scaling=False
     ax[2,2].set_xlim([lower_lim, upper_lim])
     ax[2,2].set_ylim([lower_lim, upper_lim])
     ax[2,2].legend()
-    # turn off empty plots
-    ax[3,1].axis('off')
-    ax[3,0].axis('off')
-    ax[3,2].axis('off')
-    mean_table = ax[3,1].table(cellText=np.transpose(mean_distances),rowColours=colors_dict,colColours=colors_dict, rowLabels= columns_headers,colLabels= columns_headers, loc="bottom")
-    mean_table.scale(xscale=1,yscale=1)
     fig.set_size_inches(20,10)
-    plt.savefig(f"{method}_2-components{'_scaled' if do_scaling else ''}.png", bbox_inches='tight', dpi=300)
+    plt.savefig(f"{ex_name}_{method}_2-components{'_scaled' if do_scaling else ''}{'_validation_set' if val else ''}.png", bbox_inches='tight', dpi=300)
 
     # Generate 2d projections
     fig, ax =plt.subplots(1,3)
@@ -195,7 +288,7 @@ def visualize_latent_space(idx_to_class, ex_name, method='pca', do_scaling=False
     ax[2].set_xlim([lower_lim, upper_lim])
     ax[2].set_ylim([lower_lim, upper_lim])
     fig.set_size_inches(40,10)
-    plt.savefig(f"{method}_3-components{'_scaled' if do_scaling else ''}_2d-projections.png", bbox_inches='tight', dpi=300)
+    plt.savefig(f"{ex_name}_{method}_3-components{'_scaled' if do_scaling else ''}_2d-projections{'_validation_set' if val else ''}.png", bbox_inches='tight', dpi=300)
 
     # Generate 3d scatter plot
     fig = plt.figure()
@@ -211,14 +304,24 @@ def visualize_latent_space(idx_to_class, ex_name, method='pca', do_scaling=False
     ax.set_zlim([lower_lim, upper_lim])
     ax.legend()
     fig.set_size_inches(10,10)
-    plt.savefig(f"{method}_3-components{'_scaled' if do_scaling else ''}_3d.png", bbox_inches='tight', dpi=300)
+    plt.savefig(f"{ex_name}_{method}_3-components{'_scaled' if do_scaling else ''}_3d{'_validation_set' if val else ''}.png", bbox_inches='tight', dpi=300)
 
-def get_dataloader(dataset:str, val=False):
+def get_dataloader(dataset:str, colorconst):
     if(platform.system()=="Linux"):
         root_path = os.path.join("/","space","derma-data","isic_2019")
     else:
         root_path = os.path.expanduser("~/share-all/derma-data/")
-    preprocessed_dataset = datasets.ImageFolder(os.path.join(root_path, dataset), transforms.Compose([transforms.ToTensor(), transforms.Lambda(compute_color_constancy), transforms.Resize((224,224))]))
+    
+    if dataset == 'original':
+        root = os.path.join(root_path, "clean")
+        print("Using the original dataset")
+    else:    
+        root = os.path.join(root_path,"preprocessed")
+    # apply correct transforms
+    if colorconst:
+        preprocessed_dataset = datasets.ImageFolder(root, transforms.Compose([transforms.ToTensor(), transforms.Lambda(compute_color_constancy), transforms.Resize((224,224))]))
+    else:
+        preprocessed_dataset = datasets.ImageFolder(root, transforms.Compose([transforms.ToTensor(), transforms.Resize((224,224))]))
     
     #split train and test data
     train_data_idx, val_data_idx = train_test_split(
@@ -226,21 +329,19 @@ def get_dataloader(dataset:str, val=False):
     
     train_data = Subset(preprocessed_dataset, train_data_idx)
     val_data = Subset(preprocessed_dataset, val_data_idx, transforms.Resize((224,224)))
-    
-    if (val == True): 
-        return DataLoader(val_data,
+     
+    return (DataLoader(train_data,
                                 batch_size=16,
                                 num_workers=12,
                                 drop_last=False,
                                 timeout=30000,
-                                pin_memory=True)
-    # define trainloader
-    return DataLoader(train_data,
+                                pin_memory=True),
+    DataLoader(val_data,
                                 batch_size=16,
                                 num_workers=12,
                                 drop_last=False,
                                 timeout=30000,
-                                pin_memory=True)
+                                pin_memory=True))
 
 def main():
     parser = ArgumentParser()
@@ -254,6 +355,8 @@ def main():
                     default='pca', help="PCA or TSNE method")
     parser.add_argument('-ds', '--do_scaling', type=bool, dest='do_scaling',
                     default=False, help="Perform scaling before applying PCA or TSNE")
+    parser.add_argument('-cc', '--color_constancy', type=bool, dest='colorconst',
+                    default=True, help="Apply color constancy base transform")
     parser.add_argument('-val', '--validation_set',type=bool, dest='val',
                     default=False, help="Choose between training and validation set")
     args = parser.parse_args()
@@ -275,15 +378,17 @@ def main():
     set_seed()
     experimentbuilder = ExperimentBuilder(hparams, 8, Tensor([1,1,1,1,1,1,1,1]))
     model = Classifier.load_from_checkpoint(args.model_checkpoint, hparams=hparams, classifier= experimentbuilder.classifier,extractor= experimentbuilder.extractor , loss= experimentbuilder.loss)
-    dataloader:DataLoader = get_dataloader(args.dataset, args.val)
+    train_dataloader, val_dataloader = get_dataloader(args.dataset, args.colorconst)
 
     # Comment this out if the latent_variables have already been generated
-    #latent_space_points, labels = compute_latent_space_representation(model=model,data_loader=dataloader, ex_name=args.name_ex)
-    class_to_idx = dataloader.dataset.class_to_idx
+    #compute_latent_space_representation(model=model,data_loader=train_dataloader, ex_name=args.name_ex, val=False)
+    #compute_latent_space_representation(model,val_dataloader,ex_name=args.name_ex, val=True)
+    class_to_idx = train_dataloader.dataset.class_to_idx
     idx_to_class = {v: k for k, v in class_to_idx.items()}
 
     # visualize_latent_space(latent_points=latent_space_points, labels=labels, idx_to_class=idx_to_class)
-    visualize_latent_space(idx_to_class=idx_to_class, ex_name=args.name_ex,  method=args.method, do_scaling=args.do_scaling)
+    visualize_latent_space_classes(idx_to_class=idx_to_class, ex_name=args.name_ex, method=args.method, do_scaling=args.do_scaling)
+    visualize_latent_space(idx_to_class=idx_to_class, ex_name=args.name_ex,  method=args.method, do_scaling=args.do_scaling, val=args.val)
 
 
 if __name__ == "__main__":

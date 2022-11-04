@@ -42,7 +42,7 @@ def add_visualization_on_tensorboard(logger, train_data):
 
     
 
-def train(hparams, gpu,
+def train(hparams,
           checkpoint=None):
 
     train_data, val_data, weights = data_handler.setup_data(hparams)
@@ -79,7 +79,6 @@ def train(hparams, gpu,
                                                        mode='max'
                                                        )
     trainer = pl.Trainer(accelerator="gpu",
-                         devices=[gpu],
                          max_epochs=hparams["e"],
                          logger=logger,
                          callbacks=[checkpoint_callback]
@@ -148,14 +147,12 @@ def main():
         "t": args.transforms,
         "l": args.loss,
         "osr": args.osr,
-        "lrf": args.learning_rate_finder,
-        "gpu": args.gpu
+        "lrf": args.learning_rate_finder
     }
 
     set_seed()
     train(hparams,
-          checkpoint=args.checkpoint,
-          gpu=args.gpu
+          checkpoint=args.checkpoint
           )
     
 

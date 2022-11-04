@@ -18,8 +18,8 @@ def setup_data(hparams, path=None):
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
     base_transforms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Lambda(compute_color_constancy)
+        transforms.ToTensor()
+        #transforms.Lambda(compute_color_constancy)
     ]
     )
 
@@ -63,7 +63,7 @@ def build_transform_list(flags, dataset_flag):
         elif flag == "hflip":
             transform = transforms.RandomHorizontalFlip()
         elif flag == "gaussblur": # worked
-            transform = transforms.GaussianBlur(kernel_size= (10,10))
+            transform = transforms.GaussianBlur(kernel_size= (9,9))
         elif flag == "colorjitter": # worked
             transform = transforms.ColorJitter()
         elif flag == "grayscale": # worked
