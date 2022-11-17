@@ -79,6 +79,7 @@ def train(hparams,
                                                        mode='max'
                                                        )
     trainer = pl.Trainer(accelerator="gpu",
+                         devices=1,
                          max_epochs=hparams["e"],
                          logger=logger,
                          callbacks=[checkpoint_callback]
