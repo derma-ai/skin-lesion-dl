@@ -19,7 +19,7 @@ def setup_data(hparams, path=None):
 
     base_transforms = transforms.Compose([
         transforms.ToTensor()
-        #transforms.Lambda(compute_color_constancy)
+       #transforms.Lambda(compute_color_constancy)
     ]
     )
 
@@ -38,6 +38,8 @@ def setup_data(hparams, path=None):
 
     train_data_idx, val_data_idx = train_test_split(
         list(range(len(dataset))), test_size=0.2, stratify=dataset.targets)
+    np.save('train_idx_window_eval', train_data_idx)
+    np.save('val_idx_window_eval', val_data_idx)
     # weight_scheme == 1 to use 1/n for WCE Loss 
     weights, _ = compute_weights(dataset, 1)
     train_data = Subset(dataset, train_data_idx, train_transform)

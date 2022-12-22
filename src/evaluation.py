@@ -21,7 +21,7 @@ def set_seed(seed=15):
 
 
 def test(hparams, checkpoint_path, gpu):
-    set_seed()
+    set_seed(15)
     _,dataset, _ = data_handler.setup_data(hparams, None)
     builder = ExperimentBuilder(hparams)
     model = builder.create()
@@ -50,6 +50,10 @@ def test(hparams, checkpoint_path, gpu):
 
     # features is a batch_size X output_size tensor
     labels = torch.cat(labels)
+
+    print(f'Correctly classified: {torch.eq(labels, torch.argmax(features, dim=1)).sum()}')
+    print(f'Wrongly classified: {torch.ne(labels, torch.argmax(features, dim=1)).sum()}')
+    print(f"Samples from each class: {labels.unique(return_counts=True)}")
 
     print("\n\n############\nCNN Classification\n############")
 
