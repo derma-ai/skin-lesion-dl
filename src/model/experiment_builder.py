@@ -5,7 +5,7 @@ import glob
 import torchvision.models as models
 import torch.nn as nn
 
-from model import Classifier
+from model.model import Classifier
 
 
 class ExperimentBuilder:

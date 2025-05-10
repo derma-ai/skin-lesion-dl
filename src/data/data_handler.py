@@ -10,8 +10,8 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from sklearn.model_selection import train_test_split
 
-from subset import Subset
-from color_constancy import compute_color_constancy
+from data.subset import Subset
+from data.color_constancy import compute_color_constancy
 
 def setup_data(hparams, path=None):
     # This somehow makes the performance terrible.

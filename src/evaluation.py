@@ -1,6 +1,6 @@
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, confusion_matrix, classification_report
-import data_handler
-from experiment_builder import ExperimentBuilder
+import data.data_handler as data_handler
+from model.experiment_builder import ExperimentBuilder
 import torch
 import pytorch_lightning as pl
 import pandas as pd
